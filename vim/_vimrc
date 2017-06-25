@@ -1,0 +1,650 @@
+" Set a few helpful variables
+let s:vimrcdir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+let s:vimfiles = s:vimrcdir . '/vimfiles'
+let s:is_windows = has('win32') || has('win64')
+
+" Load vimfiles relative to vimrc
+exec 'set rtp+=' . s:vimfiles
+
+" Enable VIM enhancements
+set nocompatible
+
+" Enable utf-8 in VIM
+set encoding=utf-8
+
+" Enable normal backspace behavior
+set backspace=2
+
+" Avoid delays with ESC in terminal
+" NOTE: ttimeoutlen is used for key codes. I don't think I use it,
+"       but if something stop working, we should try another values.
+set timeoutlen=1000 ttimeoutlen=0
+
+" Enable binding to system clipboard
+if s:is_windows
+  set clipboard=unnamed
+else
+  set clipboard=unnamedplus
+endif
+
+" Disable menu loading completely (not even source menu.vim)
+" (Although gui stuff, this must be done here, before "syntax on" or "filetype on")
+set guioptions+=M
+set guioptions-=m
+
+" Fix Python3.6 crash
+" NOTE: This function must be called before any python3 execution
+function! s:FixPythonPath()
+  " NOTE: Vim crashes when both Python2 and Python3 are in Windows and we want
+  "       to use python3. Apparently, this happens because PYTHONPATH is not
+  "       set and python3 tries to use Python2 libraries. Here we fix
+  "       PYTHONPATH to point to the correct libraries.
+  "       For some reason, this is only happening with Python 3.6+ and in
+  "       Windows, not Linux.
+  "       We need to also avoid Python2 in the PATH while initializing Python3,
+  "       so it doesn't conflict.
+  if s:is_windows
+    let l:prev_path = $PATH
+    let l:prev_pythonpath = $PYTHONPATH
+    let l:py3lib = system('where python3.dll')
+    let l:py3path = substitute(l:py3lib, 'python3.dll\n', '', '')
+    let l:py3dirname = fnamemodify(l:py3path, ':h:t')
+    let $PATH = substitute($PATH, 'Python27', l:py3dirname, 'g')
+    let $PYTHONPATH = l:py3path . 'Lib;' . l:py3path . 'DLLs'
+    if has('python3')
+      python3 import sys
+    endif
+    let $PATH = l:prev_path
+    let $PYTHONPATH = l:prev_pythonpath
+  endif
+endfunction
+call s:FixPythonPath()
+
+" Enable pathogen
+execute pathogen#infect()
+
+" Enable syntax highlighting and filetype support
+syntax on
+filetype plugin indent on
+
+" Disable colon indentation
+set indentkeys-=:
+
+" Set color scheme
+if $DISPLAY == "" && !s:is_windows
+  colorscheme torte
+else
+  colorscheme distinguished
+endif
+
+" Always show statusline
+set laststatus=2
+
+" Show partial command in command line
+" (specially helpful to count chars/lines in Visual mode)
+" NOTE: Help says this might slow down Vim in a terminal. Be aware.
+set showcmd
+
+" Set nicer colors for complete menu
+highlight Pmenu ctermbg=lightblue ctermfg=black
+
+" Keep equal sized windows split on diff if Vim is resized
+autocmd VimResized * if &diff | wincmd = | endif
+
+" Set filename as window title
+set title
+augroup window_title
+  autocmd!
+  autocmd BufEnter * let &titlestring=expand('%:t')
+augroup END
+
+" Set numbers column visible
+set number relativenumber
+
+" Set incremental search
+set incsearch
+
+" If swapfile exists open readonly (bypass dialog)
+augroup NoSimultaneousEdits
+  autocmd!
+  autocmd SwapExists * let v:swapchoice = 'o'
+  autocmd SwapExists * echo 'Duplicate edit session (readonly)'
+  autocmd SwapExists * echohl None
+  autocmd SwapExists * sleep 2
+augroup END
+
+" Set tab as 4 spaces by default
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+set expandtab
+
+" Set tab as 2 spaces in vim files
+augroup vim_autocmds
+  autocmd!
+  autocmd FileType vim setlocal tabstop=2
+  autocmd FileType vim setlocal softtabstop=2
+  autocmd FileType vim setlocal shiftwidth=2
+  autocmd FileType vim setlocal expandtab
+augroup END
+
+" Set default max line width to 80 and highlight excess
+" (for programming languages)
+set nowrap
+set textwidth=79
+autocmd FileType c,cpp,python highlight Excess ctermbg=DarkRed guibg=DarkRed
+autocmd FileType c,cpp,python match Excess /\%80v.*/
+
+" Set default max line width in text files to 150. Less is cumbersome
+autocmd FileType text setlocal textwidth=150
+
+" Highlight trailing whitespace
+autocmd FileType * syntax match TrailingWhiteSpace  "\s\+$" display
+autocmd FileType * highlight TrailingWhiteSpace ctermbg=Red guibg=Red
+
+" Disable annoying ex mode
+nnoremap Q <Nop>
+
+" Statusline Settings
+set statusline=%f\ %m%r%=
+set statusline+=\ %y\ %{&fileencoding}\|%{&fileformat}
+set statusline+=\ %l,%v\ %p%%
+
+" SimpleTree
+nnoremap <silent> <F2> :SimpleTreeToggle<CR>
+nnoremap <silent> <A-f> :SimpleTreeToggle<CR>
+nnoremap <silent> f :SimpleTreeToggle<CR>
+let g:simpletree_use_arrows = 1
+
+" TagBar
+nnoremap <silent> <F3> :TagbarToggle<CR>
+nnoremap <silent> <A-t> :TagbarToggle<CR>
+nnoremap <silent> t :TagbarToggle<CR>
+let g:tagbar_autoclose = 1
+if s:is_windows
+  let g:tagbar_ctags_bin = s:vimrcdir . '/ctags58/ctags.exe'
+endif
+
+" NeoComplete / NeoComplCache
+if has('lua')
+  let g:neocomplete#enable_at_startup = 1
+  let g:neocomplete#enable_fuzzy_completion = 0
+  let g:neocomplete#enable_smart_case = 1
+  let g:neocomplete#enable_auto_select = 1 " AutoComplPop like behavior.
+  inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+  function! s:my_cr_function()
+    return pumvisible() ? neocomplete#close_popup() : "\<CR>"
+  endfunction
+  inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
+  if !exists('g:neocomplete#sources')
+    let g:neocomplete#sources = {}
+  endif
+  if !exists('g:neocomplete#sources#omni#input_patterns')
+    let g:neocomplete#sources#omni#input_patterns = {}
+  endif
+  let g:neocomplete#sources#omni#input_patterns.cs = '\h\w*[^=\(\);]'
+  let g:neocomplete#sources.cs = ['omni', 'buffer']
+else
+  let g:neocomplcache_enable_at_startup = 1
+  let g:neocomplcache_enable_fuzzy_completion = 0
+  let g:neocomplcache_enable_smart_case = 1
+  let g:neocomplcache_enable_auto_select = 1 " AutoComplPop like behavior.
+  inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+  function! s:my_cr_function()
+    return pumvisible() ? neocomplcache#close_popup() : "\<CR>"
+  endfunction
+  inoremap <expr><BS> neocomplcache#smart_close_popup()."\<C-h>"
+  if !exists('g:neocomplcache_omni_patterns')
+    let g:neocomplcache_omni_patterns = {}
+  endif
+  let g:neocomplcache_omni_patterns.cs = '\h\w*[^=\(\);]'
+endif
+
+" Jedi
+let g:jedi#auto_initialization = 1
+let g:jedi#completions_enabled = 1
+let g:jedi#popup_on_dot = 1
+let g:jedi#popup_select_first = 1
+let g:jedi#use_tabs_not_buffers = 0
+let g:jedi#goto_command = "Qd"
+let g:jedi#goto_assignments_command = "Qa"
+let g:jedi#documentation_command = "Qh"
+let g:jedi#usages_command = "Qu"
+
+" Disable preview window for autocompletion info
+" (use autocmd because plugins may enable preview)
+autocmd FileType * setlocal completeopt-=preview
+
+" Close preview when leaving insert mode (clang_complete opens it)
+" autocmd InsertLeave * if pumvisible() == 0|pclose|endif
+
+" Clang_complete
+let g:clang_make_default_keymappings = 1
+let g:clang_auto_select = 1
+let g:clang_snippets = 1
+
+" OmniSharp
+" let g:Omnisharp_start_server = 0
+augroup omnisharp_autocmd
+  autocmd!
+  autocmd FileType cs setlocal omnifunc=OmniSharp#Complete
+  autocmd FileType cs nnoremap Qd :OmniSharpGotoDefinition<cr>
+  autocmd FileType cs nnoremap Qi :OmniSharpFindImplementations<cr>
+  autocmd FileType cs nnoremap Qt :OmniSharpFindType<cr>
+  autocmd FileType cs nnoremap Qs :OmniSharpFindSymbol<cr>
+  autocmd FileType cs nnoremap Qu :OmniSharpFindUsages<cr>
+  autocmd FileType cs nnoremap Qm :OmniSharpFindMembers<cr> "finds members in the current buffer
+  " cursor can be anywhere on the line containing an issue 
+  autocmd FileType cs nnoremap <leader>x  :OmniSharpFixIssue<cr>  
+  autocmd FileType cs nnoremap <leader>fx :OmniSharpFixUsings<cr>
+  autocmd FileType cs nnoremap <leader>tt :OmniSharpTypeLookup<cr>
+  autocmd FileType cs nnoremap <leader>dc :OmniSharpDocumentation<cr>
+  " autocmd FileType cs nnoremap <C-K> :OmniSharpNavigateUp<cr> "navigate up by method/property/field
+  " autocmd FileType cs nnoremap <C-J> :OmniSharpNavigateDown<cr> "navigate down by method/property/field
+augroup END
+
+" Java Complete
+autocmd FileType java setlocal omnifunc=javacomplete#Complete
+
+" CtrlP on Alt also
+nmap <A-p> <C-p>
+nmap p <C-p>
+" CtrlP Py Matcher
+let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
+
+" Use Ag if available
+if s:is_windows
+  " Use Ag in Vim folder
+  let s:ag_path = s:vimrcdir . '/ag_0.29.1-1641/'
+  let &grepprg = s:ag_path . 'ag --nogroup --nocolor --column'
+  set grepformat=%f:%l:%c:%m,%f:%l:%m
+elseif executable('ag')
+  " Use global Ag
+  let &grepprg = 'ag --nogroup --nocolor --column'
+  set grepformat=%f:%l:%c:%m,%f:%l:%m
+endif
+command! -nargs=+ Grep :silent grep! <args> | cwindow | redraw!
+
+" Linting
+let s:lint_marks = {}
+let s:lint_texts = {}
+sign define piet text=>> texthl=Search
+function! s:SetLintMarks() " Chunks unashamedly borrowed from errormarker.vim
+  if !has('signs')
+    return
+  endif
+  for l:key in keys(s:lint_marks)
+    execute ":sign unplace " . l:key
+  endfor
+  let s:lint_marks = {}
+  let s:lint_texts = {}
+  for l:d in getqflist()
+    if (l:d.bufnr == 0 || l:d.lnum == 0)
+      continue
+    endif
+    let l:key = l:d.bufnr . l:d.lnum
+    if has_key(s:lint_marks, l:key)
+      continue
+    endif
+    let s:lint_marks[l:key] = 1
+    execute ":sign place " . l:key . " line=" . l:d.lnum . " name=piet"
+          \ . " buffer=" . l:d.bufnr
+    let s:lint_texts[l:key] = l:d.text
+  endfor
+endfunction
+function! s:ShowLintText() " Bits inspired by Syntastic
+  if !has('signs')
+    return
+  endif
+  let l:key = bufnr('%') . line('.')
+  if has_key(s:lint_texts, l:key)
+    let l:msg = s:lint_texts[l:key]
+    " Sanitizing taken from Syntastic (utils.vim:wideMsg())
+    let l:msg = substitute(l:msg, "\n", '', 'g')
+    let l:chunks = split(l:msg, "\t", 1)
+    let l:msg = join(map(l:chunks[:-2], 'v:val . repeat(" ", &tabstop - s:_width(v:val) % &tabstop)'), '') . l:chunks[-1]
+    if &showcmd
+      let l:msg = strpart(l:msg, 0, &columns - 12)
+    else
+      let l:msg = strpart(l:msg, 0, &columns - 1)
+    endif
+    echo l:msg
+  else
+    echo ''
+  endif
+endfunction
+command! -nargs=0 Lint :silent! make! | call s:SetLintMarks() | redraw!
+function! s:GetPyLint()
+  if filereadable('venv/bin/pylint')
+    return 'venv/bin/pylint'
+  elseif filereadable('venv/Scripts/pylint')
+    return 'venv/Scripts/pylint'
+  else
+    return 'pylint'
+  endif
+endfunction
+augroup auto_lint
+    autocmd!
+    " Lint on write
+    autocmd BufWritePost * Lint
+    if has('signs')
+      autocmd! CursorMoved * call s:ShowLintText()
+    endif
+    " Python
+    autocmd FileType python exe ' setlocal makeprg=' . s:GetPyLint() . '\ --reports=n\ --msg-template=\"{path}:{line}:\ {msg}\"\ %:p'
+    autocmd FileType python setlocal errorformat=%f:%l:\ %m
+augroup END
+
+" Map uppercase word motion to CamelCaseMotion
+nmap <S-W> <Plug>CamelCaseMotion_w
+omap <S-W> <Plug>CamelCaseMotion_w
+nmap <S-B> <Plug>CamelCaseMotion_b
+omap <S-B> <Plug>CamelCaseMotion_b
+nmap <S-E> <Plug>CamelCaseMotion_e
+omap <S-E> <Plug>CamelCaseMotion_e
+
+" Vim-Sneak
+let g:sneak#streak = 1
+
+" Start marks handling (inspired by Vim-Bookmarks)
+let s:all_marks = map(range(97, 122), {key, val -> nr2char(val)})
+let s:all_marks = filter(s:all_marks, {key, val -> val != 'm' && val != 'j'})
+function! s:InitMarks()
+  if !exists('b:next_marks')
+    delmarks!
+    let b:next_marks = copy(s:all_marks)
+  endif
+endfunction
+function! AutoMark()
+  call s:InitMarks()
+  let l:mark = nr2char(getchar())
+  redraw
+  if l:mark == 'j'
+    exe 'marks ' . join(s:all_marks, ',') . '<cr>'
+    let l:mark = nr2char(getchar())
+    redraw
+    execute "normal! '" . l:mark
+  else
+    if l:mark == 'm'
+      let l:mark = remove(b:next_marks, 0)
+    else
+      let l:mark = remove(b:next_marks, index(b:next_marks, l:mark))
+    endif
+    call add(b:next_marks, l:mark)
+    exe 'k' . l:mark
+    echo l:mark
+  endif
+endfunction
+nnoremap <silent> m :call AutoMark()<CR>
+
+" Zeal (add mappings if installed)
+if executable("zeal")
+  function! ZealQuery(word)
+    if &filetype == "cpp"
+      let l:prefix = "c++"
+    else
+      let l:prefix = &filetype
+    endif
+    if s:is_windows
+      let l:output = system("cmd /C tasklist /FI \"IMAGENAME eq zeal.exe\" 2>NUL | find /I /N \"zeal.exe\" >NUL")
+      if v:shell_error
+        " Use !start to avoid a console window
+        exe "!start zeal \"" . l:prefix . ":" . a:word . "\""
+      else
+        " Do not use !start here, as it will leave Zeal highlighted in
+        " background (instead of showing the window on top)
+        call system("zeal \"" . l:prefix . ":" . a:word . "\"")
+      endif
+    else
+      call system("zeal \"" . l:prefix . ":" . a:word . "\"&")
+    endif
+  endfunction
+  nnoremap ZZ :call ZealQuery(expand("<cword>"))<CR>
+  command! -nargs=+ -complete=shellcmd ZealQuery call ZealQuery(<q-args>)
+endif
+
+" Nicer Buffer Navigation
+set hidden
+cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'bd' : 'q')<CR>
+cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
+" nnoremap - :ls<cr>:b 
+nnoremap - :CtrlPBuffer<cr>
+nnoremap <A-Right> :bn<cr>
+nnoremap <A-Left> :bp<cr>
+nnoremap l :bn<cr>
+nnoremap h :bp<cr>
+
+" Nicer QuickFix Navigation
+nnoremap <C-Up> :cp<cr>
+nnoremap <C-Down> :cn<cr>
+nnoremap <C-k> :cp<cr>
+nnoremap <C-j> :cn<cr>
+
+" Insert mode jk for autocompletion
+inoremap <silent> <A-k> <Up>
+inoremap <silent> <A-j> <Down>
+inoremap <silent> <expr> k pumvisible() ? "\<Up>" : "k"
+inoremap <silent> <expr> j pumvisible() ? "\<Down>" : "j"
+inoremap <silent> <C-k> <Up>
+inoremap <silent> <C-j> <Down>
+
+" Normal mode jk as page down / page up
+nnoremap <A-k> <PageUp>
+nnoremap <A-j> <PageDown>
+nnoremap k <PageUp>
+nnoremap j <PageDown>
+
+" Map jk/kj as ESC
+imap jk <Esc>
+imap kj <Esc>
+
+" Map Ñ to :
+nnoremap Ñ :
+nnoremap ñ :
+
+" Map ç to <CR>
+inoremap <silent> ç <CR>
+nnoremap <silent> ç <CR>
+cnoremap <silent> ç <CR>
+
+" Map A-w to C-w for easier window navigation
+nmap <A-w> <C-w>
+nmap w <C-w>
+
+" VirtualEnv Support
+function! s:GetVenvDirsAndVer(virtualenv)
+  if isdirectory(a:virtualenv . '/bin')
+    let l:bin = a:virtualenv . '/bin'
+    let l:lib = glob(a:virtualenv . '/lib/*/site-packages')
+    let l:python3 = filereadable(l:bin . '/python3')
+  elseif isdirectory(a:virtualenv . '/Scripts')
+    let l:bin = a:virtualenv . '/Scripts'
+    let l:lib = glob(a:virtualenv . '/Lib/site-packages')
+    let l:python3 = filereadable(l:bin . '/python3.dll')
+  else
+    return
+  endif
+  return [l:bin, l:lib, l:python3]
+endfunction
+function! SetupVirtualEnv(virtualenv) abort
+  let [l:bin, l:lib, l:python3] = s:GetVenvDirsAndVer(a:virtualenv)
+  let [g:bin, g:lib, g:python3] = [l:bin, l:lib, l:python3]
+  if l:python3 && has('python3')
+    python3 import vim, sys, os
+    python3 sys.path.insert(0, vim.eval('l:lib'))
+    python3 os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
+    " NOTE: We need to force Jedi's Python version because it may have been
+    "       auto setup to a wrong version.
+    call jedi#force_py_version(3)
+  elseif !l:python3 && has('python')
+    python import sys, vim
+    python sys.path.insert(0, vim.eval('l:lib'))
+    python os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
+    " NOTE: We need to force Jedi's Python version because it may have been
+    "       auto setup to a wrong version.
+    call jedi#force_py_version(2)
+  endif
+endfunction
+function! TearDownVirtualEnv(virtualenv) abort
+  let [l:bin, l:lib, l:python3] = s:GetVenvDirsAndVer(a:virtualenv)
+  if l:python3 && has('python3')
+    python3 import vim, sys, os
+    python3 sys.path.remove(vim.eval('l:lib'))
+    python3 os.environ['PATH'] = os.environ['PATH'].replace(vim.eval('l:bin') + os.pathsep, '')
+  elseif !l:python3 && has('python')
+    python import sys, vim
+    python sys.path.remove(vim.eval('l:lib'))
+    python os.environ['PATH'] = os.environ['PATH'].replace(vim.eval('l:bin') + os.pathsep, '')
+  endif
+  " TODO: See if there is a way to restore Jedi's Python version to before forcing it
+endfunction
+
+" Set Debugging defaults
+let s:debug_started = 0
+let s:debug_running = 0
+function! DebugStart() abort
+  if &filetype == 'python'
+    call inputsave()
+    let l:program_name = input("Debug Program (" . expand("%:p") . "): ")
+    call inputrestore()
+    if l:program_name == ""
+      exe "VBGstartPDB2 %:p"
+    else
+      exe "VBGstartPDB2 " . l:program_name
+    endif
+    let s:debug_started = 1
+    let s:debug_running = 1
+  else
+    call inputsave()
+    if exists("g:debug_program_cmd")
+      let l:input_string = input("Debug Program (" . g:debug_program_cmd . "): ")
+    else
+      let l:input_string = input("Debug Program: ")
+    endif
+    call inputrestore()
+    if l:input_string == "" && exists("g:debug_program_cmd")
+      let l:input_string = g:debug_program_cmd
+    endif
+    if l:input_string != ""
+      exe "VBGstartGDB " . l:input_string
+      let s:debug_started = 1
+      let s:debug_running = 1
+    endif
+  endif
+endfunction
+function! DebugContinue() abort
+  if !s:debug_started
+    call DebugStart()
+  elseif s:debug_running
+    exe "VBGcontinue"
+  endif
+endfunction
+function! DebugQuit() abort
+  exe "VBGkill"
+  let s:debug_started = 0
+endfunction
+augroup debugging_autocmds
+  autocmd!
+  autocmd FileType python,c,cpp map <F5> :call DebugContinue()<CR>
+augroup END
+nnoremap <F6> :VBGstepOver<CR>
+nnoremap <S-F6> :VBGstepIn<CR>
+nnoremap <F7> :VBGstepIn<CR>
+nnoremap <F8> :VBGtoggleBreakpointThisLine<CR>
+nnoremap <S-F8> :VBGclearBreakpoints<CR>
+nnoremap <F9> :VBGclearBreakpints<CR>
+nnoremap <S-F5> :call DebugQuit()<CR>
+nnoremap <F10> :call DebugQuit()<CR>
+
+" GUID Generator (this places a random guid in unnamedplus register)
+function! GenerateUUID()
+  if has('python3')
+      python3 import vim, uuid
+      python3 vim.command("let @+ = \"%s\"" % str(uuid.uuid4()))
+  elseif has('python')
+      python import vim, uuid
+      python vim.command("let @+ = \"%s\"" % str(uuid.uuid4()))
+  endif
+endfunction
+nnoremap Zg :call GenerateUUID()<CR>
+
+" Shortly blink the line and column of the search match
+function! HLNext (blinktime)
+  set invcursorline
+  set invcursorcolumn
+  redraw
+  exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
+  set invcursorline
+  set invcursorcolumn
+  redraw
+endfunction
+nnoremap <silent> *   *:call HLNext(0.4)<cr>
+nnoremap <silent> #   #:call HLNext(0.4)<cr>
+nnoremap <silent> n   n:call HLNext(0.4)<cr>
+nnoremap <silent> N   N:call HLNext(0.4)<cr>
+
+
+" Automatic Project Setup (depends on vim-rooter)
+let s:project_venv = ''
+function! SetupProject()
+  let l:filetype = &filetype
+  if l:filetype == 'python'
+    if s:project_venv != ''
+      call TearDownVirtualEnv(s:project_venv)
+      let s:project_venv = ''
+    endif
+    let l:venv = getcwd() . '/venv'
+    let g:venv_check = l:venv
+    if isdirectory(l:venv)
+      let g:venv = l:venv
+      call SetupVirtualEnv(l:venv)
+      let s:project_venv = l:venv
+      " Set max line width to 120 and highlight excess
+      highlight Excess ctermbg=DarkGrey guibg=DarkGrey
+      match Excess /\%120v.*/
+      setlocal nowrap
+      setlocal textwidth=119
+    endif
+  endif
+endfunction
+augroup AutoProjectSetup
+  autocmd User RooterChDir call SetupProject()
+  autocmd BufWinEnter * call SetupProject()
+augroup END
+
+
+"--------------------
+" GVIMRC
+"--------------------
+
+if has('gui_running')
+
+" Set Font
+if s:is_windows
+  set guifont=DejaVu_Sans_Mono:h11:cANSI:qDRAFT
+else
+  set guifont=Monospace\ Bold\ 12
+  " set guifont=DejaVu\ Sans\ Mono\ Bold\ 14
+endif
+
+" Remove toolbar and scroll bar
+set guioptions-=T  "remove toolbar
+set guioptions-=r  "remove right-hand scroll bar
+set guioptions-=R  "remove right-hand scroll bar on vertical split
+set guioptions-=l  "remove left-hand scroll bar
+set guioptions-=L  "remove left-hand scroll bar on vertical split
+
+" Set filename as window title
+set title
+augroup window_title
+  autocmd!
+  autocmd BufEnter * let &titlestring=expand('%:t')
+augroup END
+
+" Set nicer colors for complete menu
+highlight Pmenu guibg=lightblue guifg=black
+
+" Set nicer colors for folding
+highlight Folded guibg=chocolate4 guifg=black
+
+endif
