@@ -61,7 +61,9 @@ endfunction
 call s:FixPythonPath()
 
 " Enable pathogen
-execute pathogen#infect()
+" NOTE: Explicitly point to vimfiles dir to force loading
+"       if not part of the standard paths.
+execute pathogen#infect('bundle/{}', s:vimfiles . '/bundle/{}')
 
 " Enable syntax highlighting and filetype support
 syntax on
