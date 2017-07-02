@@ -66,8 +66,8 @@ call s:FixPythonPath()
 execute pathogen#infect('bundle/{}', s:vimfiles . '/bundle/{}')
 
 " Enable syntax highlighting and filetype support
-syntax on
 filetype plugin indent on
+syntax on
 
 " Disable colon indentation
 set indentkeys-=:
