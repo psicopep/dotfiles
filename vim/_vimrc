@@ -3,22 +3,26 @@ let s:vimrcdir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 let s:vimfiles = s:vimrcdir . '/vimfiles'
 let s:is_windows = has('win32') || has('win64')
 
-" Load vimfiles relative to vimrc
-exec 'set rtp+=' . s:vimfiles
 
-" Enable VIM enhancements
-set nocompatible
+"--------------------
+" Basics
+"--------------------
 
-" Enable utf-8 in VIM
-set encoding=utf-8
-
-" Enable normal backspace behavior
-set backspace=2
+set nocompatible            " Enable Vim enhancements
+set encoding=utf-8          " Enable utf-8 in Vim
+set backspace=2             " Enable normal backspace behavior
+set number relativenumber   " Set numbers column visible and relative
+set incsearch               " Set incremental search
 
 " Avoid delays with ESC in terminal
 " NOTE: ttimeoutlen is used for key codes. I don't think I use it,
 "       but if something stop working, we should try another values.
 set timeoutlen=1000 ttimeoutlen=0
+
+" Show partial command in command line
+" (specially helpful to count chars/lines in Visual mode)
+" NOTE: Help says this might slow down Vim in a terminal. Be aware.
+set showcmd
 
 " Enable binding to system clipboard
 if s:is_windows
@@ -31,6 +35,14 @@ endif
 " (Although gui stuff, this must be done here, before "syntax on" or "filetype on")
 set guioptions+=M
 set guioptions-=m
+
+" Disable colon indentation
+set indentkeys-=:
+
+
+"--------------------
+" Windows Python Fix
+"--------------------
 
 " Fix Python3.6 crash
 " NOTE: This function must be called before any python3 execution
@@ -60,6 +72,14 @@ function! s:FixPythonPath()
 endfunction
 call s:FixPythonPath()
 
+
+"--------------------
+" Plugin Loading
+"--------------------
+
+" Load vimfiles relative to vimrc
+exec 'set rtp+=' . s:vimfiles
+
 " Enable pathogen
 " NOTE: Explicitly point to vimfiles dir to force loading
 "       if not part of the standard paths.
@@ -69,8 +89,10 @@ execute pathogen#infect('bundle/{}', s:vimfiles . '/bundle/{}')
 filetype plugin indent on
 syntax on
 
-" Disable colon indentation
-set indentkeys-=:
+
+"--------------------
+" Visuals
+"--------------------
 
 " Set color scheme
 if $DISPLAY == "" && !s:is_windows
@@ -78,14 +100,6 @@ if $DISPLAY == "" && !s:is_windows
 else
   colorscheme distinguished
 endif
-
-" Always show statusline
-set laststatus=2
-
-" Show partial command in command line
-" (specially helpful to count chars/lines in Visual mode)
-" NOTE: Help says this might slow down Vim in a terminal. Be aware.
-set showcmd
 
 " Set nicer colors for complete menu
 highlight Pmenu ctermbg=lightblue ctermfg=black
@@ -98,21 +112,6 @@ set title
 augroup window_title
   autocmd!
   autocmd BufEnter * let &titlestring=expand('%:t')
-augroup END
-
-" Set numbers column visible
-set number relativenumber
-
-" Set incremental search
-set incsearch
-
-" If swapfile exists open readonly (bypass dialog)
-augroup NoSimultaneousEdits
-  autocmd!
-  autocmd SwapExists * let v:swapchoice = 'o'
-  autocmd SwapExists * echo 'Duplicate edit session (readonly)'
-  autocmd SwapExists * echohl None
-  autocmd SwapExists * sleep 2
 augroup END
 
 " Set tab as 4 spaces by default
@@ -138,13 +137,65 @@ autocmd FileType text setlocal textwidth=150
 autocmd FileType * syntax match TrailingWhiteSpace  "\s\+$" display
 autocmd FileType * highlight TrailingWhiteSpace ctermbg=Red guibg=Red
 
-" Disable annoying ex mode
-nnoremap Q <Nop>
-
 " Statusline Settings
+set laststatus=2    " Always show statusline
 set statusline=%f\ %m%r%=
 set statusline+=\ %y\ %{&fileencoding}\|%{&fileformat}
 set statusline+=\ %l,%v\ %p%%
+
+" Disable preview window for autocompletion info
+" (use autocmd because plugins may enable preview)
+autocmd FileType * setlocal completeopt-=preview
+
+
+"--------------------
+" Mappings
+"--------------------
+
+" Disable annoying ex mode
+nnoremap Q <Nop>
+
+" Nicer Buffer Navigation
+set hidden
+cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'bd' : 'q')<CR>
+cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
+" nnoremap - :ls<cr>:b 
+nnoremap - :CtrlPBuffer<cr>
+nnoremap <A-l> :bn<cr>
+nnoremap <A-h> :bp<cr>
+nnoremap l :bn<cr>
+nnoremap h :bp<cr>
+
+" Nicer QuickFix Navigation
+nnoremap <C-Up> :cp<cr>
+nnoremap <C-Down> :cn<cr>
+nnoremap <C-k> :cp<cr>
+nnoremap <C-j> :cn<cr>
+
+" Insert mode jk for autocompletion
+inoremap <A-k> <Up>
+inoremap <A-j> <Down>
+inoremap k <Up>
+inoremap j <Down>
+
+" Normal mode jk as page down / page up
+nnoremap <A-k> <PageUp>
+nnoremap <A-j> <PageDown>
+nnoremap k <PageUp>
+nnoremap j <PageDown>
+
+" Map Ñ to :
+nnoremap Ñ :
+nnoremap ñ :
+
+" Map A-w to C-w for easier window navigation
+nmap <A-w> <C-w>
+nmap w <C-w>
+
+
+"--------------------
+" Plugins Config
+"--------------------
 
 " SimpleTree
 nnoremap <silent> <F2> :SimpleTreeToggle<CR>
@@ -207,13 +258,6 @@ let g:jedi#goto_assignments_command = "Qa"
 let g:jedi#documentation_command = "Qh"
 let g:jedi#usages_command = "Qu"
 
-" Disable preview window for autocompletion info
-" (use autocmd because plugins may enable preview)
-autocmd FileType * setlocal completeopt-=preview
-
-" Close preview when leaving insert mode (clang_complete opens it)
-" autocmd InsertLeave * if pumvisible() == 0|pclose|endif
-
 " Clang_complete
 let g:clang_make_default_keymappings = 1
 let g:clang_auto_select = 1
@@ -248,7 +292,23 @@ nmap p <C-p>
 " CtrlP Py Matcher
 let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
 
-" Use Ag if available
+" Map uppercase word motion to CamelCaseMotion
+nmap <S-W> <Plug>CamelCaseMotion_w
+omap <S-W> <Plug>CamelCaseMotion_w
+nmap <S-B> <Plug>CamelCaseMotion_b
+omap <S-B> <Plug>CamelCaseMotion_b
+nmap <S-E> <Plug>CamelCaseMotion_e
+omap <S-E> <Plug>CamelCaseMotion_e
+
+" Vim-Sneak
+let g:sneak#streak = 1
+
+
+"--------------------
+" Enhancements
+"--------------------
+
+" Grep (with Ag if available)
 if s:is_windows
   " Use Ag in Vim folder
   let s:ag_path = s:vimrcdir . '/ag_0.29.1-1641/'
@@ -331,18 +391,7 @@ augroup auto_lint
   autocmd FileType python setlocal errorformat=%f:%l:\ %m
 augroup END
 
-" Map uppercase word motion to CamelCaseMotion
-nmap <S-W> <Plug>CamelCaseMotion_w
-omap <S-W> <Plug>CamelCaseMotion_w
-nmap <S-B> <Plug>CamelCaseMotion_b
-omap <S-B> <Plug>CamelCaseMotion_b
-nmap <S-E> <Plug>CamelCaseMotion_e
-omap <S-E> <Plug>CamelCaseMotion_e
-
-" Vim-Sneak
-let g:sneak#streak = 1
-
-" Start marks handling (inspired by Vim-Bookmarks)
+" Smart marks handling (inspired by Vim-Bookmarks)
 let s:all_marks = map(range(97, 122), {key, val -> nr2char(val)})
 let s:all_marks = filter(s:all_marks, {key, val -> val != 'm' && val != 'j'})
 function! s:InitMarks()
@@ -373,68 +422,34 @@ function! AutoMark()
 endfunction
 nnoremap <silent> m :call AutoMark()<CR>
 
-" Zeal (add mappings if installed)
-if executable("zeal")
-  function! ZealQuery(word)
-    if &filetype == "cpp"
-      let l:prefix = "c++"
-    else
-      let l:prefix = &filetype
-    endif
-    if s:is_windows
-      let l:output = system("cmd /C tasklist /FI \"IMAGENAME eq zeal.exe\" 2>NUL | find /I /N \"zeal.exe\" >NUL")
-      if v:shell_error
-        " Use !start to avoid a console window
-        exe "!start zeal \"" . l:prefix . ":" . a:word . "\""
-      else
-        " Do not use !start here, as it will leave Zeal highlighted in
-        " background (instead of showing the window on top)
-        call system("zeal \"" . l:prefix . ":" . a:word . "\"")
-      endif
-    else
-      call system("zeal \"" . l:prefix . ":" . a:word . "\"&")
-    endif
-  endfunction
-  nnoremap ZZ :call ZealQuery(expand("<cword>"))<CR>
-  command! -nargs=+ -complete=shellcmd ZealQuery call ZealQuery(<q-args>)
-endif
+" If swapfile exists open readonly (bypass dialog)
+augroup NoSimultaneousEdits
+  autocmd!
+  autocmd SwapExists * let v:swapchoice = 'o'
+  autocmd SwapExists * echo 'Duplicate edit session (readonly)'
+  autocmd SwapExists * echohl None
+  autocmd SwapExists * sleep 2
+augroup END
 
-" Nicer Buffer Navigation
-set hidden
-cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'bd' : 'q')<CR>
-cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
-" nnoremap - :ls<cr>:b 
-nnoremap - :CtrlPBuffer<cr>
-nnoremap <A-l> :bn<cr>
-nnoremap <A-h> :bp<cr>
-nnoremap l :bn<cr>
-nnoremap h :bp<cr>
+" Shortly blink the line and column of the search match
+function! HLNext (blinktime)
+  set invcursorline
+  set invcursorcolumn
+  redraw
+  exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
+  set invcursorline
+  set invcursorcolumn
+  redraw
+endfunction
+nnoremap <silent> *   *:call HLNext(0.4)<cr>
+nnoremap <silent> #   #:call HLNext(0.4)<cr>
+nnoremap <silent> n   n:call HLNext(0.4)<cr>
+nnoremap <silent> N   N:call HLNext(0.4)<cr>
 
-" Nicer QuickFix Navigation
-nnoremap <C-Up> :cp<cr>
-nnoremap <C-Down> :cn<cr>
-nnoremap <C-k> :cp<cr>
-nnoremap <C-j> :cn<cr>
 
-" Insert mode jk for autocompletion
-inoremap <A-k> <Up>
-inoremap <A-j> <Down>
-inoremap k <Up>
-inoremap j <Down>
-
-" Normal mode jk as page down / page up
-nnoremap <A-k> <PageUp>
-nnoremap <A-j> <PageDown>
-nnoremap k <PageUp>
-nnoremap j <PageDown>
-
-" Map Ñ to :
-nnoremap Ñ :
-nnoremap ñ :
-
-" Map A-w to C-w for easier window navigation
-nmap <A-w> <C-w>
-nmap w <C-w>
+"--------------------
+" Project Support
+"--------------------
 
 " VirtualEnv Support
 function! s:GetVenvDirsAndVer(virtualenv)
@@ -483,6 +498,39 @@ function! TearDownVirtualEnv(virtualenv) abort
   endif
   " TODO: See if there is a way to restore Jedi's Python version to before forcing it
 endfunction
+
+" Automatic Project Setup (depends on vim-rooter)
+let s:project_venv = ''
+function! SetupProject()
+  let l:filetype = &filetype
+  if l:filetype == 'python'
+    if s:project_venv != ''
+      call TearDownVirtualEnv(s:project_venv)
+      let s:project_venv = ''
+    endif
+    let l:venv = getcwd() . '/venv'
+    let g:venv_check = l:venv
+    if isdirectory(l:venv)
+      let g:venv = l:venv
+      call SetupVirtualEnv(l:venv)
+      let s:project_venv = l:venv
+      " Set max line width to 120 and highlight excess
+      highlight Excess ctermbg=DarkRed guibg=DarkRed
+      match Excess /\%120v.*/
+      setlocal nowrap
+      setlocal textwidth=119
+    endif
+  endif
+endfunction
+augroup AutoProjectSetup
+  autocmd User RooterChDir call SetupProject()
+  autocmd BufWinEnter * call SetupProject()
+augroup END
+
+
+"--------------------
+" Debugging Support
+"--------------------
 
 " Set Debugging defaults
 let s:debug_started = 0
@@ -541,6 +589,11 @@ nnoremap <F9> :VBGclearBreakpints<CR>
 nnoremap <S-F5> :call DebugQuit()<CR>
 nnoremap <F10> :call DebugQuit()<CR>
 
+
+"--------------------
+" Miscelaneous
+"--------------------
+
 " GUID Generator (this places a random guid in unnamedplus register)
 function! GenerateUUID()
   if has('python3')
@@ -553,49 +606,31 @@ function! GenerateUUID()
 endfunction
 nnoremap Zg :call GenerateUUID()<CR>
 
-" Shortly blink the line and column of the search match
-function! HLNext (blinktime)
-  set invcursorline
-  set invcursorcolumn
-  redraw
-  exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
-  set invcursorline
-  set invcursorcolumn
-  redraw
-endfunction
-nnoremap <silent> *   *:call HLNext(0.4)<cr>
-nnoremap <silent> #   #:call HLNext(0.4)<cr>
-nnoremap <silent> n   n:call HLNext(0.4)<cr>
-nnoremap <silent> N   N:call HLNext(0.4)<cr>
-
-
-" Automatic Project Setup (depends on vim-rooter)
-let s:project_venv = ''
-function! SetupProject()
-  let l:filetype = &filetype
-  if l:filetype == 'python'
-    if s:project_venv != ''
-      call TearDownVirtualEnv(s:project_venv)
-      let s:project_venv = ''
+" Zeal (add mappings if installed)
+if executable("zeal")
+  function! ZealQuery(word)
+    if &filetype == "cpp"
+      let l:prefix = "c++"
+    else
+      let l:prefix = &filetype
     endif
-    let l:venv = getcwd() . '/venv'
-    let g:venv_check = l:venv
-    if isdirectory(l:venv)
-      let g:venv = l:venv
-      call SetupVirtualEnv(l:venv)
-      let s:project_venv = l:venv
-      " Set max line width to 120 and highlight excess
-      highlight Excess ctermbg=DarkGrey guibg=DarkGrey
-      match Excess /\%120v.*/
-      setlocal nowrap
-      setlocal textwidth=119
+    if s:is_windows
+      let l:output = system("cmd /C tasklist /FI \"IMAGENAME eq zeal.exe\" 2>NUL | find /I /N \"zeal.exe\" >NUL")
+      if v:shell_error
+        " Use !start to avoid a console window
+        exe "!start zeal \"" . l:prefix . ":" . a:word . "\""
+      else
+        " Do not use !start here, as it will leave Zeal highlighted in
+        " background (instead of showing the window on top)
+        call system("zeal \"" . l:prefix . ":" . a:word . "\"")
+      endif
+    else
+      call system("zeal \"" . l:prefix . ":" . a:word . "\"&")
     endif
-  endif
-endfunction
-augroup AutoProjectSetup
-  autocmd User RooterChDir call SetupProject()
-  autocmd BufWinEnter * call SetupProject()
-augroup END
+  endfunction
+  nnoremap ZZ :call ZealQuery(expand("<cword>"))<CR>
+  command! -nargs=+ -complete=shellcmd ZealQuery call ZealQuery(<q-args>)
+endif
 
 
 "--------------------
