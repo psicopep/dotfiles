@@ -116,18 +116,12 @@ augroup NoSimultaneousEdits
 augroup END
 
 " Set tab as 4 spaces by default
-set tabstop=4
-set softtabstop=4
-set shiftwidth=4
-set expandtab
+set tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 
 " Set tab as 2 spaces in vim files
 augroup vim_autocmds
   autocmd!
-  autocmd FileType vim setlocal tabstop=2
-  autocmd FileType vim setlocal softtabstop=2
-  autocmd FileType vim setlocal shiftwidth=2
-  autocmd FileType vim setlocal expandtab
+  autocmd FileType vim setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 augroup END
 
 " Set default max line width to 80 and highlight excess
@@ -326,15 +320,15 @@ function! s:GetPyLint()
   endif
 endfunction
 augroup auto_lint
-    autocmd!
-    " Lint on write
-    autocmd BufWritePost * Lint
-    if has('signs')
-      autocmd! CursorMoved * call s:ShowLintText()
-    endif
-    " Python
-    autocmd FileType python exe ' setlocal makeprg=' . s:GetPyLint() . '\ --reports=n\ --msg-template=\"{path}:{line}:\ {msg}\"\ %:p'
-    autocmd FileType python setlocal errorformat=%f:%l:\ %m
+  autocmd!
+  " Lint on write
+  autocmd BufWritePost * Lint
+  if has('signs')
+    autocmd! CursorMoved * call s:ShowLintText()
+  endif
+  " Python
+  autocmd FileType python exe ' setlocal makeprg=' . s:GetPyLint() . '\ --reports=n\ --msg-template=\"{path}:{line}:\ {msg}\"\ %:p'
+  autocmd FileType python setlocal errorformat=%f:%l:\ %m
 augroup END
 
 " Map uppercase word motion to CamelCaseMotion
@@ -411,8 +405,8 @@ cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufn
 cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
 " nnoremap - :ls<cr>:b 
 nnoremap - :CtrlPBuffer<cr>
-nnoremap <A-Right> :bn<cr>
-nnoremap <A-Left> :bp<cr>
+nnoremap <A-l> :bn<cr>
+nnoremap <A-h> :bp<cr>
 nnoremap l :bn<cr>
 nnoremap h :bp<cr>
 
@@ -423,12 +417,10 @@ nnoremap <C-k> :cp<cr>
 nnoremap <C-j> :cn<cr>
 
 " Insert mode jk for autocompletion
-inoremap <silent> <A-k> <Up>
-inoremap <silent> <A-j> <Down>
-inoremap <silent> <expr> k pumvisible() ? "\<Up>" : "k"
-inoremap <silent> <expr> j pumvisible() ? "\<Down>" : "j"
-inoremap <silent> <C-k> <Up>
-inoremap <silent> <C-j> <Down>
+inoremap <A-k> <Up>
+inoremap <A-j> <Down>
+inoremap k <Up>
+inoremap j <Down>
 
 " Normal mode jk as page down / page up
 nnoremap <A-k> <PageUp>
@@ -436,18 +428,9 @@ nnoremap <A-j> <PageDown>
 nnoremap k <PageUp>
 nnoremap j <PageDown>
 
-" Map jk/kj as ESC
-imap jk <Esc>
-imap kj <Esc>
-
 " Map Ñ to :
 nnoremap Ñ :
 nnoremap ñ :
-
-" Map ç to <CR>
-inoremap <silent> ç <CR>
-nnoremap <silent> ç <CR>
-cnoremap <silent> ç <CR>
 
 " Map A-w to C-w for easier window navigation
 nmap <A-w> <C-w>
@@ -625,8 +608,7 @@ if has('gui_running')
 if s:is_windows
   set guifont=DejaVu_Sans_Mono:h11:cANSI:qDRAFT
 else
-  set guifont=Monospace\ Bold\ 12
-  " set guifont=DejaVu\ Sans\ Mono\ Bold\ 14
+  set guifont=Monospace\ Bold\ 14
 endif
 
 " Remove toolbar and scroll bar
@@ -635,13 +617,6 @@ set guioptions-=r  "remove right-hand scroll bar
 set guioptions-=R  "remove right-hand scroll bar on vertical split
 set guioptions-=l  "remove left-hand scroll bar
 set guioptions-=L  "remove left-hand scroll bar on vertical split
-
-" Set filename as window title
-set title
-augroup window_title
-  autocmd!
-  autocmd BufEnter * let &titlestring=expand('%:t')
-augroup END
 
 " Set nicer colors for complete menu
 highlight Pmenu guibg=lightblue guifg=black
