@@ -359,11 +359,8 @@ function! s:ShowLintText() " Bits inspired by Syntastic
     let l:msg = substitute(l:msg, "\n", '', 'g')
     let l:chunks = split(l:msg, "\t", 1)
     let l:msg = join(map(l:chunks[:-2], 'v:val . repeat(" ", &tabstop - s:_width(v:val) % &tabstop)'), '') . l:chunks[-1]
-    if &showcmd
-      let l:msg = strpart(l:msg, 0, &columns - 12)
-    else
-      let l:msg = strpart(l:msg, 0, &columns - 1)
-    endif
+    " Cut down msg to avoid conflict with showcmd
+    let l:msg = strpart(l:msg, 0, &columns - (&showcmd ? 12 : 1))
     echo l:msg
   else
     echo ''
@@ -509,7 +506,6 @@ function! SetupProject()
       let s:project_venv = ''
     endif
     let l:venv = getcwd() . '/venv'
-    let g:venv_check = l:venv
     if isdirectory(l:venv)
       let g:venv = l:venv
       call SetupVirtualEnv(l:venv)
