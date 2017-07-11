@@ -18,7 +18,7 @@ set formatoptions+=j        " Remove comment char in joining lines
 " Avoid delays with ESC in terminal
 " NOTE: ttimeoutlen is used for key codes. I don't think I use it,
 "       but if something stop working, we should try another values.
-set timeoutlen=300 ttimeoutlen=0
+set timeoutlen=600 ttimeoutlen=0
 
 " Show partial command in command line
 " (specially helpful to count chars/lines in Visual mode)
