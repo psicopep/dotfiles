@@ -290,8 +290,12 @@ autocmd FileType java setlocal omnifunc=javacomplete#Complete
 " CtrlP on Alt also
 nmap <A-p> <C-p>
 nmap p <C-p>
+" Set CtrlP to ignore venv besides repo
+let g:ctrlp_custom_ignore = '\v[\/](\.(git|hg|svn)|venv)$'
 " CtrlP Py Matcher
-let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
+if has('python') || has('python3')
+  let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
+endif
 
 " Map uppercase word motion to CamelCaseMotion
 nmap <S-W> <Plug>CamelCaseMotion_w
