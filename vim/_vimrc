@@ -181,13 +181,19 @@ inoremap j <Down>
 
 " Normal mode jk as page down / page up
 nnoremap <A-k> <PageUp>
+vnoremap <A-k> <PageUp>
 nnoremap <A-j> <PageDown>
+vnoremap <A-j> <PageDown>
 nnoremap k <PageUp>
+vnoremap k <PageUp>
 nnoremap j <PageDown>
+vnoremap j <PageDown>
 
-" Map Ñ to :
-nnoremap Ñ :
-nnoremap ñ :
+" Map ñ to ; and Ñ to :
+nmap Ñ :
+vmap Ñ :
+nmap ñ ;
+vmap ñ ;
 
 " Map A-w to C-w for easier window navigation
 nmap <A-w> <C-w>
@@ -292,6 +298,14 @@ nmap <A-p> <C-p>
 nmap p <C-p>
 " Set CtrlP to ignore venv besides repo
 let g:ctrlp_custom_ignore = '\v[\/](\.(git|hg|svn)|venv)$'
+" Add Alt mapping alternatives
+let g:ctrlp_prompt_mappings = {
+  \ 'PrtSelectMove("j")':   ['<c-j>', '<down>', '<a-j>', 'j'],
+  \ 'PrtSelectMove("k")':   ['<c-k>', '<up>', '<a-k>', 'k'],
+  \ }
+" Go to tag mapping
+nnoremap <A-g> :CtrlPBufTag<CR>
+nnoremap g :CtrlPBufTag<CR>
 " CtrlP Py Matcher
 if has('python') || has('python3')
   let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
