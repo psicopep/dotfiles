@@ -34,7 +34,6 @@ Bundle { url: "https://github.com/klen/python-mode", post_install: "LeaveOnlyPym
 Bundle { url: "https://github.com/majutsushi/tagbar" }
 Bundle { url: "https://github.com/tpope/vim-commentary" }
 Bundle { url: "https://github.com/Lokaltog/vim-distinguished", branch: "develop" }
-Bundle { url: "https://github.com/airblade/vim-rooter" }
 Bundle { url: "https://github.com/justinmk/vim-sneak", post_install: "PatchVimSneak" }
 Bundle { url: "https://github.com/tpope/vim-surround" }
 " [ Additional languages support ]
@@ -51,6 +50,8 @@ Bundle { url: "https://github.com/tpope/vim-surround" }
 " Bundle { url: "https://github.com/will133/vim-dirdiff" }
 " Bundle { url: "https://github.com/Shougo/vinarise.vim" }
 " Bundle { url: "https://github.com/diepm/vim-rest-console" }
+" [ Deprecated (keep them listed in case we change our minds) ]
+" Bundle { url: "https://github.com/airblade/vim-rooter" }
 endfunction
 
 " [ List of bundles in vimfiles to ignore (bundles manually managed) ]
@@ -63,7 +64,7 @@ endfunction
 " [ Pre/Post install functions ]
 
 function DownloadJedi(install_dir)
-  call s:InstallRepo("https://github.com/davidhalter/jedi", 'master', a:install_dir . "/jedi", "jedi")
+  call s:InstallRepo("https://github.com/davidhalter/jedi", 'master', a:install_dir . "/pythonx/jedi", "jedi")
 endfunction
 
 function CheckOmnisharpRequirements()

@@ -518,9 +518,25 @@ function! s:TearDownVirtualEnv(virtualenv) abort
   " TODO: See if there is a way to restore Jedi's Python version to before forcing it
 endfunction
 
-" Automatic Project Setup (depends on vim-rooter)
+" Automatic Project Setup
+function! s:GoToProjectRoot()
+  if !exists('b:project_root')
+    let l:bufdir = fnamemodify(resolve(expand(':p')), ':h')
+    for l:hintdir in ['.git', '.hg', 'venv']
+      let b:project_root = finddir(l:hintdir, l:bufdir . ';')
+      if b:project_root != ''
+        let b:project_root = fnamemodify(b:project_root, ':h')
+        break
+      endif
+    endfor
+  endif
+  if b:project_root != ''
+    exe 'cd ' . b:project_root
+  endif
+endfunction
 let s:project_venv = ''
 function! s:SetupProject()
+  call s:GoToProjectRoot()
   let l:filetype = &filetype
   if l:filetype == 'python'
     if s:project_venv != ''
@@ -538,7 +554,7 @@ function! s:SetupProject()
   endif
 endfunction
 augroup AutoProjectSetup
-  autocmd User RooterChDir call <SID>SetupProject()
+  autocmd!
   autocmd BufWinEnter * call <SID>SetupProject()
 augroup END
 
