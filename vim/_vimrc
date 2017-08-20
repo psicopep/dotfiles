@@ -306,6 +306,9 @@ let g:ctrlp_prompt_mappings = {
 " Go to tag mapping
 nnoremap <A-g> :CtrlPBufTag<CR>
 nnoremap g :CtrlPBufTag<CR>
+if s:is_windows
+  let g:ctrlp_buftag_ctags_bin = s:vimrcdir . '/ctags58/ctags.exe'
+endif
 " CtrlP Py Matcher
 if has('python') || has('python3')
   let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
