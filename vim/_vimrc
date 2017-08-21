@@ -521,7 +521,7 @@ endfunction
 " Automatic Project Setup
 function! s:GoToProjectRoot()
   if !exists('b:project_root')
-    let l:bufdir = fnamemodify(resolve(expand(':p')), ':h')
+    let l:bufdir = fnamemodify(resolve(expand('%:p')), ':h')
     for l:hintdir in ['.git', '.hg', 'venv']
       let b:project_root = finddir(l:hintdir, l:bufdir . ';')
       if b:project_root != ''
