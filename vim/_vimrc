@@ -666,18 +666,21 @@ else
 endif
 
 " Toggle transparent background (with F12)
-let s:is_transparent = 0
-function! s:ToggleTransparent()
-  if s:is_transparent
-    colorscheme distinguished
-    let s:is_transparent = 0
-  else
-    highlight Normal ctermbg=none
-    highlight Comment ctermbg=none
-    let s:is_transparent = 1
-  endif
-endfunction
-nnoremap <silent> <F12> :call <SID>ToggleTransparent()<CR>
+if $DISPLAY != "" && !has('gui_running')
+  let s:is_transparent = 0
+  function! s:ToggleTransparent()
+    if s:is_transparent
+      colorscheme distinguished
+      let s:is_transparent = 0
+    else
+      highlight Normal ctermbg=none
+      highlight Comment ctermbg=none
+      let s:is_transparent = 1
+    endif
+  endfunction
+  nnoremap <silent> <F12> :call <SID>ToggleTransparent()<CR>
+  call s:ToggleTransparent()
+endif
 
 
 "--------------------
