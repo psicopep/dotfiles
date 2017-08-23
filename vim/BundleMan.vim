@@ -31,6 +31,7 @@ Bundle { url: "https://github.com/davidhalter/jedi-vim", post_install: "Download
 Bundle { url: "https://github.com/Shougo/neocomplcache.vim" }
 Bundle { url: "https://github.com/Shougo/neocomplete.vim" }
 Bundle { url: "https://github.com/klen/python-mode", post_install: "LeaveOnlyPymodeSyntax" }
+Bundle { url: "https://github.com/psicopep/simpletree" }
 Bundle { url: "https://github.com/majutsushi/tagbar" }
 Bundle { url: "https://github.com/tpope/vim-commentary" }
 Bundle { url: "https://github.com/Lokaltog/vim-distinguished", branch: "develop" }
@@ -57,7 +58,6 @@ endfunction
 " [ List of bundles in vimfiles to ignore (bundles manually managed) ]
 
 function IgnoreList()
-Bundle { "simpletree" }
 endfunction
 
 
