@@ -153,6 +153,16 @@ autocmd FileType * setlocal completeopt-=preview
 " Mappings
 "--------------------
 
+" Alt mapping helper
+function! s:AltMapping(modes, nore, keys, expression)
+  for l:mode in split(a:modes, '\zs')
+    exec l:mode . a:nore . 'map ' . '<A-' . a:keys . '> ' . a:expression
+    if !has('gui_running')
+      exec l:mode . a:nore . 'map ' . '' . a:keys . ' ' . a:expression
+    endif
+  endfor
+endfunction
+
 " Disable annoying ex mode
 nnoremap Q <Nop>
 
@@ -162,10 +172,9 @@ cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufn
 cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
 " nnoremap - :ls<cr>:b 
 nnoremap - :CtrlPBuffer<cr>
-nnoremap <A-l> :bn<cr>
-nnoremap <A-h> :bp<cr>
-nnoremap l :bn<cr>
-nnoremap h :bp<cr>
+call s:AltMapping('n', 'nore', 'b', ':CtrlPBuffer<cr>')
+call s:AltMapping('n', 'nore', 'l', ':bn<cr>')
+call s:AltMapping('n', 'nore', 'h', ':bp<cr>')
 
 " Nicer QuickFix Navigation
 nnoremap <C-Up> :cp<cr>
@@ -174,20 +183,12 @@ nnoremap <C-k> :cp<cr>
 nnoremap <C-j> :cn<cr>
 
 " Insert mode jk for autocompletion
-inoremap <A-k> <Up>
-inoremap <A-j> <Down>
-inoremap k <Up>
-inoremap j <Down>
+call s:AltMapping('i', 'nore', 'k', '<Up>')
+call s:AltMapping('i', 'nore', 'j', '<Down>')
 
 " Normal mode jk as page down / page up
-nnoremap <A-k> <PageUp>
-vnoremap <A-k> <PageUp>
-nnoremap <A-j> <PageDown>
-vnoremap <A-j> <PageDown>
-nnoremap k <PageUp>
-vnoremap k <PageUp>
-nnoremap j <PageDown>
-vnoremap j <PageDown>
+call s:AltMapping('nv', 'nore', 'k', '<PageUp>')
+call s:AltMapping('nv', 'nore', 'j', '<PageDown>')
 
 " Map ñ to ; and Ñ to :
 nmap Ñ :
@@ -196,8 +197,7 @@ nmap ñ ;
 vmap ñ ;
 
 " Map A-w to C-w for easier window navigation
-nmap <A-w> <C-w>
-nmap w <C-w>
+call s:AltMapping('n', '', 'w', '<C-w>')
 
 
 "--------------------
@@ -206,14 +206,12 @@ nmap w <C-w>
 
 " SimpleTree
 nnoremap <silent> <F2> :SimpleTreeToggle<CR>
-nnoremap <silent> <A-f> :SimpleTreeToggle<CR>
-nnoremap <silent> f :SimpleTreeToggle<CR>
+call s:AltMapping('n', 'nore', 'f', ':SimpleTreeToggle<CR>')
 let g:simpletree_use_arrows = 1
 
 " TagBar
 nnoremap <silent> <F3> :TagbarToggle<CR>
-nnoremap <silent> <A-t> :TagbarToggle<CR>
-nnoremap <silent> t :TagbarToggle<CR>
+call s:AltMapping('n', 'nore', 't', ':TagbarToggle<CR>')
 let g:tagbar_autoclose = 1
 if s:is_windows
   let g:tagbar_ctags_bin = s:vimrcdir . '/ctags58/ctags.exe'
@@ -294,8 +292,7 @@ augroup END
 autocmd FileType java setlocal omnifunc=javacomplete#Complete
 
 " CtrlP on Alt also
-nmap <A-p> <C-p>
-nmap p <C-p>
+call s:AltMapping('n', '', 'p', '<C-p>')
 " Set CtrlP to ignore venv besides repo
 let g:ctrlp_custom_ignore = '\v[\/](\.(git|hg|svn)|venv)$'
 " Add Alt mapping alternatives
@@ -304,8 +301,7 @@ let g:ctrlp_prompt_mappings = {
   \ 'PrtSelectMove("k")':   ['<c-k>', '<up>', '<a-k>', 'k'],
   \ }
 " Go to tag mapping
-nnoremap <A-g> :CtrlPBufTag<CR>
-nnoremap g :CtrlPBufTag<CR>
+call s:AltMapping('n', 'nore', 'g', ':CtrlPBufTag<CR>')
 if s:is_windows
   let g:ctrlp_buftag_ctags_bin = s:vimrcdir . '/ctags58/ctags.exe'
 endif
