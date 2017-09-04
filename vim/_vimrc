@@ -407,8 +407,8 @@ augroup auto_lint
 augroup END
 
 " Smart marks handling (inspired by Vim-Bookmarks)
-let s:all_marks = map(range(97, 122), {key, val -> nr2char(val)})
-let s:all_marks = filter(s:all_marks, {key, val -> val != 'm' && val != 'j'})
+let s:all_marks = map(range(97, 122), 'nr2char(v:val)')
+let s:all_marks = filter(s:all_marks, 'v:val != "m" && v:val != "j"')
 function! s:InitMarks()
   if !exists('b:next_marks')
     delmarks!
