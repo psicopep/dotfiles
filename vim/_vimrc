@@ -199,6 +199,9 @@ vmap ñ ;
 " Map A-w to C-w for easier window navigation
 call s:AltMapping('n', '', 'w', '<C-w>')
 
+" Map space to :
+nnoremap <Space> :
+
 
 "--------------------
 " Plugins Config
