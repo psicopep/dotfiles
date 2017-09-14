@@ -172,7 +172,7 @@ cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufn
 cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
 " nnoremap - :ls<cr>:b 
 nnoremap - :CtrlPBuffer<cr>
-call s:AltMapping('n', 'nore', 'b', ':CtrlPBuffer<cr>')
+call s:AltMapping('n', 'nore', 'c', ':CtrlPBuffer<cr>')
 call s:AltMapping('n', 'nore', 'l', ':bn<cr>')
 call s:AltMapping('n', 'nore', 'h', ':bp<cr>')
 
@@ -297,7 +297,7 @@ autocmd FileType java setlocal omnifunc=javacomplete#Complete
 " CtrlP on Alt also
 call s:AltMapping('n', '', 'p', '<C-p>')
 " Set CtrlP to ignore venv besides repo
-let g:ctrlp_custom_ignore = '\v[\/](\.(git|hg|svn)|venv)$'
+let g:ctrlp_custom_ignore = '\v[\/](\.(git|hg|svn)|venv.*)$'
 " Add Alt mapping alternatives
 let g:ctrlp_prompt_mappings = {
   \ 'PrtSelectMove("j")':   ['<c-j>', '<down>', '<a-j>', 'j'],
@@ -307,10 +307,6 @@ let g:ctrlp_prompt_mappings = {
 call s:AltMapping('n', 'nore', 'g', ':CtrlPBufTag<CR>')
 if s:is_windows
   let g:ctrlp_buftag_ctags_bin = s:vimrcdir . '/ctags58/ctags.exe'
-endif
-" CtrlP Py Matcher
-if has('python') || has('python3')
-  let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
 endif
 
 " Map uppercase word motion to CamelCaseMotion
