@@ -109,19 +109,14 @@ highlight Pmenu ctermbg=lightblue ctermfg=black
 autocmd VimResized * if &diff | wincmd = | endif
 
 " Set filename as window title
-set title
-augroup window_title
-  autocmd!
-  autocmd BufEnter * let &titlestring=expand('%:t')
-augroup END
+set title titlestring=%t
 
 " Set tab as 4 spaces by default
 set tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 
 " Set tab as 2 spaces in vim files
 augroup vim_autocmds
-  autocmd!
-  autocmd FileType vim setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+  autocmd! FileType vim setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 augroup END
 
 " Set default max line width to 80 and highlight excess
@@ -398,7 +393,7 @@ augroup auto_lint
   " Lint on write
   autocmd BufWritePost * Lint
   if has('signs')
-    autocmd! CursorMoved * call <SID>ShowLintText()
+    autocmd CursorMoved * call <SID>ShowLintText()
   endif
   " Python
   autocmd FileType python exe ' setlocal makeprg=' . <SID>GetPyLint() . '\ --reports=n\ --msg-template=\"{path}:{line}:\ {msg}\"\ %:p'
@@ -447,12 +442,10 @@ augroup END
 
 " Shortly blink the line and column of the search match
 function! s:HLNext (blinktime)
-  set invcursorline
-  set invcursorcolumn
+  set invcursorline invcursorcolumn
   redraw
   exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
-  set invcursorline
-  set invcursorcolumn
+  set invcursorline invcursorcolumn
   redraw
 endfunction
 nnoremap <silent> *   *:call <SID>HLNext(0.4)<cr>
