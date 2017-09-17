@@ -220,45 +220,10 @@ if s:is_windows
   let g:tagbar_ctags_bin = s:vimrcdir . '/ctags58/ctags.exe'
 endif
 
-" NeoComplete / NeoComplCache
-if has('lua')
-  let g:neocomplete#enable_at_startup = 1
-  let g:neocomplete#enable_fuzzy_completion = 0
-  let g:neocomplete#enable_smart_case = 1
-  let g:neocomplete#enable_auto_select = 1 " AutoComplPop like behavior.
-  inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-  function! s:my_cr_function()
-    return pumvisible() ? neocomplete#close_popup() : "\<CR>"
-  endfunction
-  inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
-  if !exists('g:neocomplete#sources')
-    let g:neocomplete#sources = {}
-  endif
-  if !exists('g:neocomplete#sources#omni#input_patterns')
-    let g:neocomplete#sources#omni#input_patterns = {}
-  endif
-  let g:neocomplete#sources#omni#input_patterns.cs = '\h\w*[^=\(\);]'
-  let g:neocomplete#sources.cs = ['omni', 'buffer']
-else
-  let g:neocomplcache_enable_at_startup = 1
-  let g:neocomplcache_enable_fuzzy_completion = 0
-  let g:neocomplcache_enable_smart_case = 1
-  let g:neocomplcache_enable_auto_select = 1 " AutoComplPop like behavior.
-  inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-  function! s:my_cr_function()
-    return pumvisible() ? neocomplcache#close_popup() : "\<CR>"
-  endfunction
-  inoremap <expr><BS> neocomplcache#smart_close_popup()."\<C-h>"
-  if !exists('g:neocomplcache_omni_patterns')
-    let g:neocomplcache_omni_patterns = {}
-  endif
-  let g:neocomplcache_omni_patterns.cs = '\h\w*[^=\(\);]'
-endif
-
 " Jedi
 let g:jedi#auto_initialization = 1
 let g:jedi#completions_enabled = 1
-let g:jedi#popup_on_dot = 1
+let g:jedi#popup_on_dot = 0
 let g:jedi#popup_select_first = 1
 let g:jedi#use_tabs_not_buffers = 0
 let g:jedi#goto_command = 'Qd'
@@ -327,6 +292,42 @@ let g:sneak#streak = 1
 "--------------------
 " Enhancements
 "--------------------
+
+" AutoComplete
+set completeopt=menu,menuone,noinsert
+let s:last_substr = ''
+let s:last_accept = 0
+function! s:AutoCompleteShow()
+  if s:last_accept
+    let s:last_accept = 0
+    return
+  endif
+  let l:pos = getpos('.')
+  let l:substr = matchstr(strpart(getline(l:pos[1]), 0, l:pos[2]-1), "[^ \t]*$")
+  if l:substr !=# s:last_substr
+    let s:last_substr = l:substr
+    if strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
+      return feedkeys("\<c-x>\<c-o>", 'i')
+    elseif l:substr =~# '/\k\k\+$'
+      return feedkeys("\<c-x>\<c-f>", 'i')
+    elseif l:substr =~# '\k\k\+$'
+      return feedkeys("\<c-n>", 'i')
+    endif
+  endif
+endfunction
+function! s:AutoCompleteSelect()
+  if pumvisible()
+    let s:last_accept = 1
+    return "\<c-y>"
+  else
+    return "\<cr>"
+  endif
+endfunction
+augroup auto_complete
+  autocmd!
+  autocmd TextChangedI * noautocmd call <SID>AutoCompleteShow()
+augroup END
+inoremap <silent> <CR> <C-r>=<SID>AutoCompleteSelect()<CR>
 
 " Grep (with Ag if available)
 if s:is_windows

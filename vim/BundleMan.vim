@@ -27,8 +27,6 @@ Bundle { url: "https://github.com/bkad/CamelCaseMotion" }
 Bundle { url: "https://github.com/ctrlpvim/ctrlp.vim" }
 Bundle { url: "https://github.com/Yggdroot/indentLine" }
 Bundle { url: "https://github.com/davidhalter/jedi-vim", post_install: "DownloadJedi" }
-Bundle { url: "https://github.com/Shougo/neocomplcache.vim" }
-Bundle { url: "https://github.com/Shougo/neocomplete.vim" }
 Bundle { url: "https://github.com/klen/python-mode", post_install: "LeaveOnlyPymodeSyntax" }
 Bundle { url: "https://github.com/psicopep/simpletree" }
 Bundle { url: "https://github.com/majutsushi/tagbar" }
@@ -51,6 +49,8 @@ Bundle { url: "https://github.com/tpope/vim-surround" }
 " Bundle { url: "https://github.com/Shougo/vinarise.vim" }
 " Bundle { url: "https://github.com/diepm/vim-rest-console" }
 " [ Deprecated (keep them listed in case we change our minds) ]
+" Bundle { url: "https://github.com/Shougo/neocomplcache.vim" }
+" Bundle { url: "https://github.com/Shougo/neocomplete.vim" }
 " Bundle { url: "https://github.com/airblade/vim-rooter" }
 " Bundle { url: "https://github.com/FelikZ/ctrlp-py-matcher" }
 endfunction
