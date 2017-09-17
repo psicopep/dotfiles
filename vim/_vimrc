@@ -8,7 +8,9 @@ let s:is_windows = has('win32') || has('win64')
 " Basics
 "--------------------
 
-set nocompatible            " Enable Vim enhancements
+if &compatible
+  set nocompatible          " Enable Vim enhancements
+endif
 set encoding=utf-8          " Enable utf-8 in Vim
 set backspace=2             " Enable normal backspace behavior
 set number relativenumber   " Set numbers column visible and relative
@@ -88,7 +90,9 @@ execute pathogen#infect('bundle/{}', s:vimfiles . '/bundle/{}')
 
 " Enable syntax highlighting and filetype support
 filetype plugin indent on
-syntax on
+if !exists('g:syntax_on')
+  syntax enable
+endif
 
 
 "--------------------
@@ -96,7 +100,7 @@ syntax on
 "--------------------
 
 " Set color scheme
-if $DISPLAY == "" && !s:is_windows
+if $DISPLAY ==# '' && !s:is_windows
   colorscheme torte
 else
   colorscheme distinguished
@@ -105,33 +109,34 @@ endif
 " Set nicer colors for complete menu
 highlight Pmenu ctermbg=lightblue ctermfg=black
 
-" Keep equal sized windows split on diff if Vim is resized
-autocmd VimResized * if &diff | wincmd = | endif
-
 " Set filename as window title
 set title titlestring=%t
 
 " Set tab as 4 spaces by default
 set tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 
+" Group for visual autocmds
+augroup visuals | autocmd! | augroup END
+
+" Keep equal sized windows split on diff if Vim is resized
+autocmd visuals VimResized * if &diff | wincmd = | endif
+
 " Set tab as 2 spaces in vim files
-augroup vim_autocmds
-  autocmd! FileType vim setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
-augroup END
+autocmd visuals FileType vim setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 
 " Set default max line width to 80 and highlight excess
 " (for programming languages)
 set nowrap
 set textwidth=79
-autocmd FileType c,cpp,python highlight Excess ctermbg=DarkRed guibg=DarkRed
-autocmd FileType c,cpp,python match Excess /\%80v.*/
+autocmd visuals FileType c,cpp,python highlight Excess ctermbg=DarkRed guibg=DarkRed
+autocmd visuals FileType c,cpp,python match Excess /\%80v.*/
 
 " Set default max line width in text files to 150. Less is cumbersome
-autocmd FileType text setlocal textwidth=150
+autocmd visuals FileType text setlocal textwidth=150
 
 " Highlight trailing whitespace
-autocmd FileType * syntax match TrailingWhiteSpace  "\s\+$" display
-autocmd FileType * highlight TrailingWhiteSpace ctermbg=Red guibg=Red
+autocmd visuals FileType * syntax match TrailingWhiteSpace "\s\+$" display
+autocmd visuals FileType * highlight TrailingWhiteSpace ctermbg=Red guibg=Red
 
 " Statusline Settings
 set laststatus=2    " Always show statusline
@@ -141,7 +146,7 @@ set statusline+=\ %l,%v\ %p%%
 
 " Disable preview window for autocompletion info
 " (use autocmd because plugins may enable preview)
-autocmd FileType * setlocal completeopt-=preview
+autocmd visuals FileType * setlocal completeopt-=preview
 
 
 "--------------------
@@ -256,10 +261,10 @@ let g:jedi#completions_enabled = 1
 let g:jedi#popup_on_dot = 1
 let g:jedi#popup_select_first = 1
 let g:jedi#use_tabs_not_buffers = 0
-let g:jedi#goto_command = "Qd"
-let g:jedi#goto_assignments_command = "Qa"
-let g:jedi#documentation_command = "Qh"
-let g:jedi#usages_command = "Qu"
+let g:jedi#goto_command = 'Qd'
+let g:jedi#goto_assignments_command = 'Qa'
+let g:jedi#documentation_command = 'Qh'
+let g:jedi#usages_command = 'Qu'
 
 " Clang_complete
 let g:clang_make_default_keymappings = 1
@@ -287,7 +292,10 @@ augroup omnisharp_autocmd
 augroup END
 
 " Java Complete
-autocmd FileType java setlocal omnifunc=javacomplete#Complete
+augroup javacomplete_autocmd
+  autocmd!
+  autocmd FileType java setlocal omnifunc=javacomplete#Complete
+augroup END
 
 " CtrlP on Alt also
 call s:AltMapping('n', '', 'p', '<C-p>')
@@ -342,7 +350,7 @@ function! s:SetLintMarks() " Chunks unashamedly borrowed from errormarker.vim
     return
   endif
   for l:key in keys(s:lint_marks)
-    execute ":sign unplace " . l:key
+    execute ':sign unplace ' . l:key
   endfor
   let s:lint_marks = {}
   let s:lint_texts = {}
@@ -355,22 +363,18 @@ function! s:SetLintMarks() " Chunks unashamedly borrowed from errormarker.vim
       continue
     endif
     let s:lint_marks[l:key] = 1
-    execute ":sign place " . l:key . " line=" . l:d.lnum . " name=piet"
-          \ . " buffer=" . l:d.bufnr
+    execute ':sign place ' . l:key . ' line=' . l:d.lnum . ' name=piet'
+          \ . ' buffer=' . l:d.bufnr
     let s:lint_texts[l:key] = l:d.text
   endfor
 endfunction
 function! s:ShowLintText() " Bits inspired by Syntastic
-  if !has('signs')
-    return
-  endif
   let l:key = bufnr('%') . line('.')
   if has_key(s:lint_texts, l:key)
     let l:msg = s:lint_texts[l:key]
-    " Sanitizing taken from Syntastic (utils.vim:wideMsg())
     let l:msg = substitute(l:msg, "\n", '', 'g')
     let l:chunks = split(l:msg, "\t", 1)
-    let l:msg = join(map(l:chunks[:-2], 'v:val . repeat(" ", &tabstop - s:_width(v:val) % &tabstop)'), '') . l:chunks[-1]
+    let l:msg = join(l:chunks[:-2], ' ') . ' ' . l:chunks[-1]
     " Cut down msg to avoid conflict with showcmd
     let l:msg = strpart(l:msg, 0, &columns - (&showcmd ? 12 : 1))
     echo l:msg
@@ -402,7 +406,7 @@ augroup END
 
 " Smart marks handling (inspired by Vim-Bookmarks)
 let s:all_marks = map(range(97, 122), 'nr2char(v:val)')
-let s:all_marks = filter(s:all_marks, 'v:val != "m" && v:val != "j"')
+let s:all_marks = filter(s:all_marks, 'v:val !=# "m" && v:val !=# "j"')
 function! s:InitMarks()
   if !exists('b:next_marks')
     delmarks!
@@ -413,13 +417,13 @@ function! s:AutoMark()
   call s:InitMarks()
   let l:mark = nr2char(getchar())
   redraw
-  if l:mark == 'j'
+  if l:mark ==# 'j'
     exe 'marks ' . join(s:all_marks, ',') . '<cr>'
     let l:mark = nr2char(getchar())
     redraw
     execute "normal! '" . l:mark
   else
-    if l:mark == 'm'
+    if l:mark ==# 'm'
       let l:mark = remove(b:next_marks, 0)
     else
       let l:mark = remove(b:next_marks, index(b:next_marks, l:mark))
@@ -512,13 +516,13 @@ function! s:GoToProjectRoot()
     let l:bufdir = fnamemodify(resolve(expand('%:p')), ':h')
     for l:hintdir in ['.git', '.hg', 'venv']
       let b:project_root = finddir(l:hintdir, l:bufdir . ';')
-      if b:project_root != ''
+      if b:project_root !=# ''
         let b:project_root = fnamemodify(b:project_root, ':h')
         break
       endif
     endfor
   endif
-  if b:project_root != ''
+  if b:project_root !=# ''
     exe 'cd ' . b:project_root
   endif
 endfunction
@@ -526,8 +530,8 @@ let s:project_venv = ''
 function! s:SetupProject()
   call s:GoToProjectRoot()
   let l:filetype = &filetype
-  if l:filetype == 'python'
-    if s:project_venv != ''
+  if l:filetype ==# 'python'
+    if s:project_venv !=# ''
       call s:TearDownVirtualEnv(s:project_venv)
       let s:project_venv = ''
     endif
@@ -555,30 +559,30 @@ augroup END
 let s:debug_started = 0
 let s:debug_running = 0
 function! s:DebugStart() abort
-  if &filetype == 'python'
+  if &filetype ==# 'python'
     call inputsave()
-    let l:program_name = input("Debug Program (" . expand("%:p") . "): ")
+    let l:program_name = input('Debug Program (' . expand('%:p') . '): ')
     call inputrestore()
-    if l:program_name == ""
-      exe "VBGstartPDB2 %:p"
+    if l:program_name ==# ''
+      exe 'VBGstartPDB2 %:p'
     else
-      exe "VBGstartPDB2 " . l:program_name
+      exe 'VBGstartPDB2 ' . l:program_name
     endif
     let s:debug_started = 1
     let s:debug_running = 1
   else
     call inputsave()
-    if exists("g:debug_program_cmd")
-      let l:input_string = input("Debug Program (" . g:debug_program_cmd . "): ")
+    if exists('g:debug_program_cmd')
+      let l:input_string = input('Debug Program (' . g:debug_program_cmd . '): ')
     else
-      let l:input_string = input("Debug Program: ")
+      let l:input_string = input('Debug Program: ')
     endif
     call inputrestore()
-    if l:input_string == "" && exists("g:debug_program_cmd")
+    if l:input_string ==# '' && exists('g:debug_program_cmd')
       let l:input_string = g:debug_program_cmd
     endif
-    if l:input_string != ""
-      exe "VBGstartGDB " . l:input_string
+    if l:input_string !=# ''
+      exe 'VBGstartGDB ' . l:input_string
       let s:debug_started = 1
       let s:debug_running = 1
     endif
@@ -588,11 +592,11 @@ function! s:DebugContinue() abort
   if !s:debug_started
     call s:DebugStart()
   elseif s:debug_running
-    exe "VBGcontinue"
+    exe 'VBGcontinue'
   endif
 endfunction
 function! s:DebugQuit() abort
-  exe "VBGkill"
+  exe 'VBGkill'
   let s:debug_started = 0
 endfunction
 augroup debugging_autocmds
@@ -617,44 +621,44 @@ nnoremap <F10> :call <SID>DebugQuit()<CR>
 function! s:GenerateUUID()
   if has('python3')
       python3 import vim, uuid
-      python3 vim.command("let @+ = \"%s\"" % str(uuid.uuid4()))
+      python3 vim.command('let @+ = "%s"' % str(uuid.uuid4()))
   elseif has('python')
       python import vim, uuid
-      python vim.command("let @+ = \"%s\"" % str(uuid.uuid4()))
+      python vim.command('let @+ = "%s"' % str(uuid.uuid4()))
   endif
 endfunction
 nnoremap Zg :call <SID>GenerateUUID()<CR>
 
 " Zeal (add mappings if installed)
-if executable("zeal")
+if executable('zeal')
   function! s:ZealQuery(word)
-    if &filetype == "cpp"
-      let l:prefix = "c++"
+    if &filetype ==# 'cpp'
+      let l:prefix = 'c++'
     else
       let l:prefix = &filetype
     endif
     if s:is_windows
-      let l:output = system("cmd /C tasklist /FI \"IMAGENAME eq zeal.exe\" 2>NUL | find /I /N \"zeal.exe\" >NUL")
+      let l:output = system('cmd /C tasklist /FI "IMAGENAME eq zeal.exe" 2>NUL | find /I /N "zeal.exe" >NUL')
       if v:shell_error
         " Use !start to avoid a console window
-        exe "!start zeal \"" . l:prefix . ":" . a:word . "\""
+        exe '!start zeal "' . l:prefix . ':' . a:word . '"'
       else
         " Do not use !start here, as it will leave Zeal highlighted in
         " background (instead of showing the window on top)
-        call system("zeal \"" . l:prefix . ":" . a:word . "\"")
+        call system('zeal "' . l:prefix . ':' . a:word . '"')
       endif
     else
-      call system("zeal \"" . l:prefix . ":" . a:word . "\"&")
+      call system('zeal "' . l:prefix . ':' . a:word . '"&')
     endif
   endfunction
-  nnoremap ZZ :call <SID>ZealQuery(expand("<cword>"))<CR>
+  nnoremap ZZ :call <SID>ZealQuery(expand('<cword>'))<CR>
   command! -nargs=+ -complete=shellcmd ZealQuery call <SID>ZealQuery(<q-args>)
 else
   nnoremap ZZ <Nop>
 endif
 
 " Toggle transparent background (with F12)
-if $DISPLAY != "" && !has('gui_running')
+if $DISPLAY !=# '' && !has('gui_running')
   let s:is_transparent = 0
   function! s:ToggleTransparent()
     if s:is_transparent
