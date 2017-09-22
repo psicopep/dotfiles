@@ -64,7 +64,7 @@ endfunction
 " [ Pre/Post install functions ]
 
 function DownloadJedi(install_dir)
-  call s:InstallRepo("https://github.com/davidhalter/jedi", 'master', a:install_dir . "/pythonx/jedi", "jedi")
+  call s:InstallRepo("https://github.com/davidhalter/jedi", '5427b02712828b2875d35b5ee1c8b5e58f820537', a:install_dir . "/pythonx/jedi", "jedi")
 endfunction
 
 function CheckOmnisharpRequirements()
