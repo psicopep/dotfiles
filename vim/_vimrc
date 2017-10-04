@@ -172,7 +172,7 @@ cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufn
 cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
 " nnoremap - :ls<cr>:b 
 nnoremap - :CtrlPBuffer<cr>
-call s:AltMapping('n', 'nore', 'c', ':CtrlPBuffer<cr>')
+call s:AltMapping('n', 'nore', 's', ':CtrlPBuffer<cr>')
 call s:AltMapping('n', 'nore', 'l', ':bn<cr>')
 call s:AltMapping('n', 'nore', 'h', ':bp<cr>')
 
@@ -201,6 +201,9 @@ call s:AltMapping('n', '', 'w', '<C-w>')
 
 " Map space to :
 nnoremap <Space> :
+
+" Map A-d to ESC
+call s:AltMapping('nvioc', 'nore', 'd', '<ESC>')
 
 
 "--------------------
@@ -270,6 +273,7 @@ let g:ctrlp_custom_ignore = '\v[\/](\.(git|hg|svn)|venv.*)$'
 let g:ctrlp_prompt_mappings = {
   \ 'PrtSelectMove("j")':   ['<c-j>', '<down>', '<a-j>', 'j'],
   \ 'PrtSelectMove("k")':   ['<c-k>', '<up>', '<a-k>', 'k'],
+  \ 'PrtExit()':            ['<esc>', '<c-c>', '<c-g>', '<a-d>', 'd'],
   \ }
 " Go to tag mapping
 call s:AltMapping('n', 'nore', 'g', ':CtrlPBufTag<CR>')
