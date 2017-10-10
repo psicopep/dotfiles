@@ -543,16 +543,18 @@ function s:EraseDownloadScript()
 endfunction
 
 function s:UpdateRTP(vimfiles)
+  let l:vimfiles = substitute(a:vimfiles, '\\', '/', 'g')
   let l:lines = ['let s:paths = "$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME"']
   let l:afterlines = ['let s:paths .= ",$VIM/vimfiles/after,$HOME/.vim/after"']
   let l:set_rtp = ['exec "set rtp=" . s:paths']
-  for l:bundle in glob(a:vimfiles . '/bundle/*', 0, 1)
+  for l:bundle in glob(l:vimfiles . '/bundle/*', 0, 1)
+    let l:bundle = substitute(l:bundle, '\\', '/', 'g')
     call add(l:lines, 'let s:paths .= ",' . l:bundle . '"')
     if isdirectory(l:bundle . '/after')
       call add(l:afterlines, 'let s:paths .= ",' . l:bundle . '/after"')
     endif
   endfor
-  call writefile(l:lines + l:afterlines + l:set_rtp, a:vimfiles . '/BundleMan_rtp.vim')
+  call writefile(l:lines + l:afterlines + l:set_rtp, l:vimfiles . '/BundleMan_rtp.vim')
 endfunction
 
 function s:GetVimfiles()
