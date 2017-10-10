@@ -80,13 +80,11 @@ call s:FixPythonPath()
 " Plugin Loading
 "--------------------
 
-" Load vimfiles relative to vimrc
-exec 'set rtp+=' . s:vimfiles
-
-" Enable pathogen
-" NOTE: Explicitly point to vimfiles dir to force loading
-"       if not part of the standard paths.
-execute pathogen#infect('bundle/{}', s:vimfiles . '/bundle/{}')
+" Load bundles
+let s:bundleman_rtp = s:vimfiles . '/BundleMan_rtp.vim'
+if filereadable(s:bundleman_rtp)
+  exec 'source ' . s:bundleman_rtp
+endif
 
 " Enable syntax highlighting and filetype support
 filetype plugin indent on
@@ -103,7 +101,11 @@ endif
 if $DISPLAY ==# '' && !s:is_windows
   colorscheme torte
 else
-  colorscheme distinguished
+  try
+    colorscheme distinguished
+  catch /^Vim\%((\a\+)\)\=:E185/
+    colorscheme torte
+  endtry
 endif
 
 " Set nicer colors for complete menu
@@ -116,7 +118,9 @@ set title titlestring=%t
 set tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 
 " Group for visual autocmds
-augroup visuals | autocmd! | augroup END
+augroup visuals
+  autocmd!
+augroup END
 
 " Keep equal sized windows split on diff if Vim is resized
 autocmd visuals VimResized * if &diff | wincmd = | endif
@@ -183,12 +187,18 @@ nnoremap <C-k> :cp<cr>
 nnoremap <C-j> :cn<cr>
 
 " Insert mode jk for autocompletion
-call s:AltMapping('i', 'nore', 'k', '<Up>')
-call s:AltMapping('i', 'nore', 'j', '<Down>')
+function! s:insert_alt_j()
+  return pumvisible() ? "\<Down>" : "\<ESC>j"
+endfunction
+function! s:insert_alt_k()
+  return pumvisible() ? "\<Up>" : "\<ESC>k"
+endfunction
+call s:AltMapping('i', 'nore', 'j', '<C-r>=<SID>insert_alt_j()<CR>')
+call s:AltMapping('i', 'nore', 'k', '<C-r>=<SID>insert_alt_k()<CR>')
 
 " Normal mode jk as page down / page up
-call s:AltMapping('nv', 'nore', 'k', '<PageUp>')
 call s:AltMapping('nv', 'nore', 'j', '<PageDown>')
+call s:AltMapping('nv', 'nore', 'k', '<PageUp>')
 
 " Map ñ to ; and Ñ to :
 nmap Ñ :

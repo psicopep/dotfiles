@@ -373,10 +373,11 @@ function s:InstallRepo(url, branch, destdir, install_only_subdir)
   call s:DeleteDir(outdir)
 endfunction
 
-function s:InstallPathogen(vimfiles)
-  call s:InstallRepo(s:PATHOGEN_URL, 'master', a:vimfiles, '')
-  call s:CreateDir(a:vimfiles . "/bundle")
-endfunction
+" NOTE: Replaced with BundleMan_rtp.vim
+" function s:InstallPathogen(vimfiles)
+"   call s:InstallRepo(s:PATHOGEN_URL, 'master', a:vimfiles, '')
+"   call s:CreateDir(a:vimfiles . "/bundle")
+" endfunction
 
 function s:UpdateBundles(vimfiles)
   " Set vimfiles as workdir (it must be writable)
@@ -387,7 +388,10 @@ function s:UpdateBundles(vimfiles)
   call s:UnpackUnzipScript()
   call s:UnpackDownloadScript()
   " Install/Update Pathogen
-  call s:InstallPathogen(a:vimfiles)
+  " NOTE: Replaced with BundleMan_rtp.vim
+  " call s:InstallPathogen(a:vimfiles)
+  " Create bundle directory
+  call s:CreateDir(a:vimfiles . "/bundle")
   " Download and install repos
   let i = 0
   while i < len(s:bundles)
@@ -538,6 +542,19 @@ function s:EraseDownloadScript()
   call delete(s:WORKDIR . '/' . s:DOWNLOAD_SCRIPT_FILENAME)
 endfunction
 
+function s:UpdateRTP(vimfiles)
+  let l:lines = ['let s:paths = "$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME"']
+  let l:afterlines = ['let s:paths .= ",$VIM/vimfiles/after,$HOME/.vim/after"']
+  let l:set_rtp = ['exec "set rtp=" . s:paths']
+  for l:bundle in glob(a:vimfiles . '/bundle/*', 0, 1)
+    call add(l:lines, 'let s:paths .= ",' . l:bundle . '"')
+    if isdirectory(l:bundle . '/after')
+      call add(l:afterlines, 'let s:paths .= ",' . l:bundle . '/after"')
+    endif
+  endfor
+  call writefile(l:lines + l:afterlines + l:set_rtp, a:vimfiles . '/BundleMan_rtp.vim')
+endfunction
+
 function s:GetVimfiles()
   if g:VIMFILES == 'HOME'
     if s:IsWindows()
@@ -593,6 +610,7 @@ function s:Main()
       call s:CleanNotOwned(vimfiles)
     endif
   endif
+  call s:UpdateRTP(vimfiles)
   echo "Done!"
 endfunction
 
