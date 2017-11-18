@@ -250,30 +250,34 @@ let g:clang_auto_select = 1
 let g:clang_snippets = 1
 
 " OmniSharp
-" let g:Omnisharp_start_server = 0
-augroup omnisharp_autocmd
-  autocmd!
-  autocmd FileType cs setlocal omnifunc=OmniSharp#Complete
-  autocmd FileType cs nnoremap Qd :OmniSharpGotoDefinition<cr>
-  autocmd FileType cs nnoremap Qi :OmniSharpFindImplementations<cr>
-  autocmd FileType cs nnoremap Qt :OmniSharpFindType<cr>
-  autocmd FileType cs nnoremap Qs :OmniSharpFindSymbol<cr>
-  autocmd FileType cs nnoremap Qu :OmniSharpFindUsages<cr>
-  autocmd FileType cs nnoremap Qm :OmniSharpFindMembers<cr> "finds members in the current buffer
-  " cursor can be anywhere on the line containing an issue 
-  autocmd FileType cs nnoremap <leader>x  :OmniSharpFixIssue<cr>  
-  autocmd FileType cs nnoremap <leader>fx :OmniSharpFixUsings<cr>
-  autocmd FileType cs nnoremap <leader>tt :OmniSharpTypeLookup<cr>
-  autocmd FileType cs nnoremap <leader>dc :OmniSharpDocumentation<cr>
-  " autocmd FileType cs nnoremap <C-K> :OmniSharpNavigateUp<cr> "navigate up by method/property/field
-  " autocmd FileType cs nnoremap <C-J> :OmniSharpNavigateDown<cr> "navigate down by method/property/field
-augroup END
+if stridx(&rtp, 'omnisharp-vim') != -1
+  " let g:Omnisharp_start_server = 0
+  augroup omnisharp_autocmd
+    autocmd!
+    autocmd FileType cs setlocal omnifunc=OmniSharp#Complete
+    autocmd FileType cs nnoremap Qd :OmniSharpGotoDefinition<cr>
+    autocmd FileType cs nnoremap Qi :OmniSharpFindImplementations<cr>
+    autocmd FileType cs nnoremap Qt :OmniSharpFindType<cr>
+    autocmd FileType cs nnoremap Qs :OmniSharpFindSymbol<cr>
+    autocmd FileType cs nnoremap Qu :OmniSharpFindUsages<cr>
+    autocmd FileType cs nnoremap Qm :OmniSharpFindMembers<cr> "finds members in the current buffer
+    " cursor can be anywhere on the line containing an issue 
+    autocmd FileType cs nnoremap <leader>x  :OmniSharpFixIssue<cr>  
+    autocmd FileType cs nnoremap <leader>fx :OmniSharpFixUsings<cr>
+    autocmd FileType cs nnoremap <leader>tt :OmniSharpTypeLookup<cr>
+    autocmd FileType cs nnoremap <leader>dc :OmniSharpDocumentation<cr>
+    " autocmd FileType cs nnoremap <C-K> :OmniSharpNavigateUp<cr> "navigate up by method/property/field
+    " autocmd FileType cs nnoremap <C-J> :OmniSharpNavigateDown<cr> "navigate down by method/property/field
+  augroup END
+endif
 
 " Java Complete
-augroup javacomplete_autocmd
-  autocmd!
-  autocmd FileType java setlocal omnifunc=javacomplete#Complete
-augroup END
+if stridx(&rtp, 'vim-javacomplete2') != -1
+  augroup javacomplete_autocmd
+    autocmd!
+    autocmd FileType java setlocal omnifunc=javacomplete#Complete
+  augroup END
+endif
 
 " CtrlP on Alt also
 call s:AltMapping('n', '', 'p', '<C-p>')
