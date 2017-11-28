@@ -312,7 +312,11 @@ let g:sneak#streak = 1
 "--------------------
 
 " AutoComplete
-set completeopt=menu,menuone,noinsert
+if has('patch-7.4-775')
+  set completeopt=menu,menuone,noinsert
+else
+  set completeopt=menu,menuone,longest
+endif
 let s:last_substr = ''
 let s:last_accept = 0
 function! s:AutoCompleteShow()
