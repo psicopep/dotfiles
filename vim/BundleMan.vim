@@ -544,14 +544,18 @@ endfunction
 
 function s:UpdateRTP(vimfiles)
   let l:vimfiles = substitute(a:vimfiles, '\\', '/', 'g')
-  let l:lines = ['let s:paths = "$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME"']
+  let l:lines = [
+        \ 'let s:bundles = fnamemodify(resolve(expand("<sfile>:p")), ":h") . "/bundle"',
+        \ 'let s:bundles = substitute(s:bundles, "\\", "/", "g")',
+        \ 'let s:paths = "$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME"'
+        \]
   let l:afterlines = ['let s:paths .= ",$VIM/vimfiles/after,$HOME/.vim/after"']
   let l:set_rtp = ['exec "set rtp=" . s:paths']
-  for l:bundle in glob(l:vimfiles . '/bundle/*', 0, 1)
-    let l:bundle = substitute(l:bundle, '\\', '/', 'g')
-    call add(l:lines, 'let s:paths .= ",' . l:bundle . '"')
-    if isdirectory(l:bundle . '/after')
-      call add(l:afterlines, 'let s:paths .= ",' . l:bundle . '/after"')
+  for l:bundle_path in glob(l:vimfiles . '/bundle/*', 0, 1)
+    let l:bundle = fnamemodify(l:bundle_path, ':t')
+    call add(l:lines, 'let s:paths .= "," . s:bundles . "/' . l:bundle . '"')
+    if isdirectory(l:bundle_path . '/after')
+      call add(l:afterlines, 'let s:paths .= "," . s:bundles . "/' . l:bundle . '/after"')
     endif
   endfor
   call writefile(l:lines + l:afterlines + l:set_rtp, l:vimfiles . '/BundleMan_rtp.vim')
