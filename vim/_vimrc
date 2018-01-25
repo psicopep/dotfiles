@@ -321,6 +321,7 @@ else
 endif
 let s:last_substr = ''
 let s:last_accept = 0
+let s:omni = 0
 function! s:AutoCompleteShow()
   if s:last_accept
     let s:last_accept = 0
@@ -328,14 +329,21 @@ function! s:AutoCompleteShow()
   endif
   let l:pos = getpos('.')
   let l:substr = matchstr(strpart(getline(l:pos[1]), 0, l:pos[2]-1), "[^ \t]*$")
-  if l:substr !=# s:last_substr
+  let l:omni_failed = l:substr ==# s:last_substr && s:omni
+  if (l:substr !=# s:last_substr || l:omni_failed)
     let s:last_substr = l:substr
-    if strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
-      return feedkeys("\<c-x>\<c-o>", 'i')
-    elseif l:substr =~# '/\k\k\+$'
-      return feedkeys("\<c-x>\<c-f>", 'i')
-    elseif l:substr =~# '\k\k\+$'
-      return feedkeys("\<c-n>", 'i')
+    if !pumvisible()
+      if l:omni_failed && l:substr =~# '\k\+\(\.\|->\|::\)\k\k\k*$'
+        let s:omni = 0
+        return feedkeys("\<c-g>\<c-g>\<c-n>", 'i')
+      elseif strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
+        let s:omni = 1
+        return feedkeys("\<c-x>\<c-o>", 'i')
+      elseif l:substr =~# '/\k\k\+$'
+        return feedkeys("\<c-x>\<c-f>", 'i')
+      elseif l:substr =~# '\k\k\+$'
+        return feedkeys("\<c-n>", 'i')
+      endif
     endif
   endif
 endfunction
@@ -352,6 +360,7 @@ augroup auto_complete
   autocmd TextChangedI * noautocmd call <SID>AutoCompleteShow()
 augroup END
 inoremap <silent> <CR> <C-r>=<SID>AutoCompleteSelect()<CR>
+inoremap <silent> <expr> <BS> "\<c-g>\<c-g>\<BS>"
 
 " Grep (with Ag if available)
 if s:is_windows
