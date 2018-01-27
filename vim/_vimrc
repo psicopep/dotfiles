@@ -336,6 +336,8 @@ function! s:AutoCompleteShow()
       if l:omni_failed && l:substr =~# '\k\+\(\.\|->\|::\)\k\k\k*$'
         let s:omni = 0
         return feedkeys("\<c-g>\<c-g>\<c-n>", 'i')
+      elseif l:omni_failed
+        let s:omni = 0
       elseif strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
         let s:omni = 1
         return feedkeys("\<c-x>\<c-o>", 'i')
