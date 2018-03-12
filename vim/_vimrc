@@ -16,6 +16,7 @@ set backspace=2             " Enable normal backspace behavior
 set number relativenumber   " Set numbers column visible and relative
 set incsearch               " Set incremental search
 set formatoptions+=j        " Remove comment char in joining lines
+set fileformats=unix,dos    " Make Vim infer either unix or dos format from file
 
 " Avoid delays with ESC in terminal
 " NOTE: ttimeoutlen is used for key codes. I don't think I use it,
