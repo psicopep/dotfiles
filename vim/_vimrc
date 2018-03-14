@@ -365,15 +365,15 @@ augroup END
 inoremap <silent> <CR> <C-r>=<SID>AutoCompleteSelect()<CR>
 inoremap <silent> <expr> <BS> "\<c-g>\<c-g>\<BS>"
 
-" Grep (with Ag if available)
+" Grep (with ripgrep if available)
 if s:is_windows
-  " Use Ag in Vim folder
-  let s:ag_path = s:vimrcdir . '/ag_0.29.1-1641/'
-  let &grepprg = s:ag_path . 'ag --nogroup --nocolor --column'
+  " Use ripgrep in Vim folder
+  let s:rg_path = s:vimrcdir . '/ripgrep-0.8.1/'
+  let &grepprg = s:rg_path . 'rg --vimgrep --no-heading'
   set grepformat=%f:%l:%c:%m,%f:%l:%m
-elseif executable('ag')
-  " Use global Ag
-  let &grepprg = 'ag --nogroup --nocolor --column'
+elseif executable('rg')
+  " Use global ripgrep
+  let &grepprg = 'rg --vimgrep --no-heading'
   set grepformat=%f:%l:%c:%m,%f:%l:%m
 endif
 command! -nargs=+ Grep :silent grep! <args> | cwindow | redraw!
