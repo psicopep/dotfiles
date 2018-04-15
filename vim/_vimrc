@@ -708,7 +708,9 @@ if $DISPLAY !=# '' && !has('gui_running')
     endif
   endfunction
   nnoremap <silent> <F12> :call <SID>ToggleTransparent()<CR>
-  call s:ToggleTransparent()
+  if $TERM_TRANSPARENT == 1
+    call s:ToggleTransparent()
+  endif
 endif
 
 
