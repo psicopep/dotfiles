@@ -17,6 +17,8 @@ set number relativenumber   " Set numbers column visible and relative
 set incsearch               " Set incremental search
 set formatoptions+=j        " Remove comment char in joining lines
 set fileformats=unix,dos    " Make Vim infer either unix or dos format from file
+set wildignorecase          " Make find/edit cmd-complete ignore case
+set suffixes+=.html         " Lower priority of html files on cmd-complete
 
 " Avoid delays with ESC in terminal
 " NOTE: ttimeoutlen is used for key codes. I don't think I use it,
@@ -177,9 +179,7 @@ nnoremap Q <Nop>
 set hidden
 cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'bd' : 'q')<CR>
 cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
-" nnoremap - :ls<cr>:b 
-nnoremap - :CtrlPBuffer<cr>
-call s:AltMapping('n', 'nore', 's', ':CtrlPBuffer<cr>')
+call s:AltMapping('n', 'nore', 's', ':ls<cr>:b ')
 call s:AltMapping('n', 'nore', 'l', ':bn<cr>')
 call s:AltMapping('n', 'nore', 'h', ':bp<cr>')
 
@@ -218,6 +218,9 @@ nnoremap <Space> :
 " Map A-d to ESC
 call s:AltMapping('nvioc', 'nore', 'd', '<ESC>')
 
+" Edit with precharged wildcards
+call s:AltMapping('n', 'nore', 'e', ':e **/*')
+
 
 "--------------------
 " Plugins Config
@@ -227,14 +230,6 @@ call s:AltMapping('nvioc', 'nore', 'd', '<ESC>')
 nnoremap <silent> <F2> :SimpleTreeToggle<CR>
 call s:AltMapping('n', 'nore', 'f', ':SimpleTreeToggle<CR>')
 let g:simpletree_use_arrows = 1
-
-" TagBar
-nnoremap <silent> <F3> :TagbarToggle<CR>
-call s:AltMapping('n', 'nore', 't', ':TagbarToggle<CR>')
-let g:tagbar_autoclose = 1
-if s:is_windows
-  let g:tagbar_ctags_bin = s:vimrcdir . '/ctags58/ctags.exe'
-endif
 
 " Jedi
 let g:jedi#auto_initialization = 1
@@ -280,22 +275,6 @@ if stridx(&rtp, 'vim-javacomplete2') != -1
     autocmd!
     autocmd FileType java setlocal omnifunc=javacomplete#Complete
   augroup END
-endif
-
-" CtrlP on Alt also
-call s:AltMapping('n', '', 'p', '<C-p>')
-" Set CtrlP to ignore venv besides repo
-let g:ctrlp_custom_ignore = '\v[\/](\.(git|hg|svn)|venv.*)$'
-" Add Alt mapping alternatives
-let g:ctrlp_prompt_mappings = {
-  \ 'PrtSelectMove("j")':   ['<c-j>', '<down>', '<a-j>', 'j'],
-  \ 'PrtSelectMove("k")':   ['<c-k>', '<up>', '<a-k>', 'k'],
-  \ 'PrtExit()':            ['<esc>', '<c-c>', '<c-g>', '<a-d>', 'd'],
-  \ }
-" Go to tag mapping
-call s:AltMapping('n', 'nore', 'g', ':CtrlPBufTag<CR>')
-if s:is_windows
-  let g:ctrlp_buftag_ctags_bin = s:vimrcdir . '/ctags58/ctags.exe'
 endif
 
 " Map uppercase word motion to CamelCaseMotion
@@ -494,6 +473,37 @@ nnoremap <silent> #   #:call <SID>HLNext(0.4)<cr>
 nnoremap <silent> n   n:call <SID>HLNext(0.4)<cr>
 nnoremap <silent> N   N:call <SID>HLNext(0.4)<cr>
 
+" Tags
+let s:ctags = s:is_windows ? s:vimrcdir . '/ctags58/ctags.exe' : 'ctags'
+let s:tags = []
+function! s:JumpToTag()
+  let l:tag_info = split(s:tags[line('.')-1], '\t')
+  wincmd q
+  call cursor(0, 0)
+  let l:pattern = substitute(l:tag_info[2], '^\/\(.\{-}\)\/;"$', '\1', '')
+  call search('\M' . l:pattern)
+  normal _
+endfunction
+function! s:ShowTags(jump)
+  let s:tags = split(system(s:ctags . ' -f - --format=2 --fields=fKs --python-kinds=-i ' . expand('%')), '\n')
+  let l:lines = []
+  for l:tag in s:tags
+    call add(l:lines, substitute(l:tag, '\(.\{-}\)\t.\{-}\t.\{-}\t\(.\{-}\)', '\1\t\t\t\t\t\2', ''))
+  endfor
+  silent keepalt botright new
+  setlocal winfixwidth nobuflisted buftype=nofile noswapfile bufhidden=wipe
+  call setline(1, l:lines)
+  setlocal nomodifiable
+  nnoremap <buffer> <silent> <CR> :call <SID>JumpToTag()<CR>
+  nnoremap <buffer> <silent> <ESC> :wincmd q<CR>
+  nnoremap <buffer> / /\c^
+  if a:jump
+    call feedkeys('/')
+  endif
+endfunction
+call s:AltMapping('n', 'nore', 't', ':call <SID>ShowTags(0)<CR>')
+call s:AltMapping('n', 'nore', 'g', ':call <SID>ShowTags(1)<CR>')
+
 
 "--------------------
 " Project Support
@@ -579,6 +589,8 @@ function! s:SetupProject()
       " Set max line width to 120 and highlight excess
       match Excess /\%120v.*/
       setlocal nowrap textwidth=119
+      " Ignore venv in file completion
+      set wildignore+=venv/*
     endif
   endif
 endfunction
