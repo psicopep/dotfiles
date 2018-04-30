@@ -47,39 +47,6 @@ set indentkeys-=:
 
 
 "--------------------
-" Windows Python Fix
-"--------------------
-
-" Fix Python3.6 crash
-" NOTE: This function must be called before any python3 execution
-function! s:FixPythonPath()
-  " NOTE: Vim crashes when both Python2 and Python3 are in Windows and we want
-  "       to use python3. Apparently, this happens because PYTHONPATH is not
-  "       set and python3 tries to use Python2 libraries. Here we fix
-  "       PYTHONPATH to point to the correct libraries.
-  "       For some reason, this is only happening with Python 3.6+ and in
-  "       Windows, not Linux.
-  "       We need to also avoid Python2 in the PATH while initializing Python3,
-  "       so it doesn't conflict.
-  if s:is_windows
-    let l:prev_path = $PATH
-    let l:prev_pythonpath = $PYTHONPATH
-    let l:py3lib = system('where python3.dll')
-    let l:py3path = substitute(l:py3lib, 'python3.dll\n', '', '')
-    let l:py3dirname = fnamemodify(l:py3path, ':h:t')
-    let $PATH = substitute($PATH, 'Python27', l:py3dirname, 'g')
-    let $PYTHONPATH = l:py3path . 'Lib;' . l:py3path . 'DLLs'
-    if has('python3')
-      python3 import sys
-    endif
-    let $PATH = l:prev_path
-    let $PYTHONPATH = l:prev_pythonpath
-  endif
-endfunction
-call s:FixPythonPath()
-
-
-"--------------------
 " Plugin Loading
 "--------------------
 
