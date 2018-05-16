@@ -1,0 +1,26 @@
+URxvt.buffered: true
+URxvt.foreground: grey
+URxvt.underlineColor: blue
+URxvt.font: xft:DejaVu Sans Mono:bold:pixelsize=18:antialias=true
+URxvt.boldFont: xft:DejaVu Sans Mono:bold:pixelsize=20:antialias=true
+URxvt.scrollBar: false
+URxvt.geometry: 85x22
+URxvt.borderLess: true
+
+!Real Transparency
+URxvt.depth: 32
+URxvt.background: rgba:0000/0000/0000/8888
+
+!Fix Control-ArrowKey behavior
+URxvt.keysym.Control-Up:   \033[1;5A
+URxvt.keysym.Control-Down:    \033[1;5B
+URxvt.keysym.Control-Left:    \033[1;5D
+URxvt.keysym.Control-Right:    \033[1;5C
+
+!Disable Perl Extensions
+URxvt.perl-ext-common:
+URxvt.perl-ext:
+
+!Disable Anoying Ctrl+Shift behavior
+URxvt.iso14755: false
+URxvt.iso14755_52: false
