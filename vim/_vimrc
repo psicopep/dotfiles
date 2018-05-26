@@ -500,14 +500,14 @@ function! s:SetupVirtualEnv(virtualenv) abort
     python3 os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
     " NOTE: We need to force Jedi's Python version because it may have been
     "       auto setup to a wrong version.
-    call jedi#force_py_version(3)
+    let g:jedi#force_py_version = 3
   elseif !l:python3 && has('python')
     python import sys, os, vim
     python sys.path.insert(0, vim.eval('l:lib'))
     python os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
     " NOTE: We need to force Jedi's Python version because it may have been
     "       auto setup to a wrong version.
-    call jedi#force_py_version(2)
+    let g:jedi#force_py_version = 2
   endif
 endfunction
 function! s:TearDownVirtualEnv(virtualenv) abort

@@ -26,7 +26,6 @@ function BundleList()
 Bundle { url: "https://github.com/bkad/CamelCaseMotion" }
 Bundle { url: "https://github.com/Yggdroot/indentLine" }
 Bundle { url: "https://github.com/davidhalter/jedi-vim", post_install: "DownloadJedi" }
-Bundle { url: "https://github.com/klen/python-mode", post_install: "LeaveOnlyPymodeSyntax" }
 Bundle { url: "https://github.com/psicopep/simpletree" }
 Bundle { url: "https://github.com/tpope/vim-commentary" }
 Bundle { url: "https://github.com/Lokaltog/vim-distinguished", branch: "develop" }
@@ -53,6 +52,7 @@ Bundle { url: "https://github.com/tpope/vim-surround" }
 " Bundle { url: "https://github.com/Shougo/neocomplete.vim" }
 " Bundle { url: "https://github.com/airblade/vim-rooter" }
 " Bundle { url: "https://github.com/FelikZ/ctrlp-py-matcher" }
+" Bundle { url: "https://github.com/klen/python-mode", post_install: "LeaveOnlyPymodeSyntax" }
 endfunction
 
 " [ List of bundles in vimfiles to ignore (bundles manually managed) ]
@@ -64,7 +64,8 @@ endfunction
 " [ Pre/Post install functions ]
 
 function DownloadJedi(install_dir)
-  call s:InstallRepo("https://github.com/davidhalter/jedi", '5427b02712828b2875d35b5ee1c8b5e58f820537', a:install_dir . "/pythonx/jedi", "jedi")
+  call s:InstallRepo("https://github.com/davidhalter/jedi", 'bd7c65d9639c2d451d44c6d135b4f6043a918950', a:install_dir . "/pythonx/jedi", "jedi")
+  call s:InstallRepo("https://github.com/davidhalter/parso", '6f385bdba182059e0c46917a414981a6d0894527', a:install_dir . "/pythonx/parso", "parso")
 endfunction
 
 function CheckOmnisharpRequirements()
