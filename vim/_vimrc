@@ -74,7 +74,8 @@ elseif s:is_windows && !has('gui_running')
   colorscheme default
 else
   try
-    colorscheme distinguished
+    colorscheme angr
+    highlight LineNr ctermbg=None guibg=Black
   catch /^Vim\%((\a\+)\)\=:E185/
     colorscheme torte
   endtry
@@ -208,6 +209,7 @@ let g:jedi#goto_command = 'Qd'
 let g:jedi#goto_assignments_command = 'Qa'
 let g:jedi#documentation_command = 'Qh'
 let g:jedi#usages_command = 'Qu'
+let g:jedi#force_py_version = 3
 
 " Clang_complete
 let g:clang_make_default_keymappings = 1
@@ -678,7 +680,7 @@ if $DISPLAY !=# '' && !has('gui_running')
   let s:is_transparent = 0
   function! s:ToggleTransparent()
     if s:is_transparent
-      colorscheme distinguished
+      highlight Normal ctermbg=Black
       let s:is_transparent = 0
     else
       highlight Normal ctermbg=none
@@ -712,6 +714,9 @@ set guioptions-=r  "remove right-hand scroll bar
 set guioptions-=R  "remove right-hand scroll bar on vertical split
 set guioptions-=l  "remove left-hand scroll bar
 set guioptions-=L  "remove left-hand scroll bar on vertical split
+
+" Force black background
+highlight Normal guibg=Black
 
 " Set nicer colors for complete menu
 highlight Pmenu guibg=lightblue guifg=black

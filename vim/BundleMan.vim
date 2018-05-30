@@ -23,12 +23,12 @@ let TAKE_OWNERSHIP = 1
 " [ List of bundles to install / update ]
 
 function BundleList()
+Bundle { url: "https://github.com/zacanger/angr.vim" }
 Bundle { url: "https://github.com/bkad/CamelCaseMotion" }
 Bundle { url: "https://github.com/Yggdroot/indentLine" }
 Bundle { url: "https://github.com/davidhalter/jedi-vim", post_install: "DownloadJedi" }
 Bundle { url: "https://github.com/psicopep/simpletree" }
 Bundle { url: "https://github.com/tpope/vim-commentary" }
-Bundle { url: "https://github.com/Lokaltog/vim-distinguished", branch: "develop" }
 Bundle { url: "https://github.com/justinmk/vim-sneak", post_install: "PatchVimSneak" }
 Bundle { url: "https://github.com/tpope/vim-surround" }
 " [ Additional languages support ]
@@ -37,6 +37,13 @@ Bundle { url: "https://github.com/tpope/vim-surround" }
 " Bundle { url: "https://github.com/artur-shaik/vim-javacomplete2" }
 " Bundle { url: "https://github.com/vim-pandoc/vim-pandoc" }
 " Bundle { url: "https://github.com/vim-pandoc/vim-pandoc-syntax" }
+" [ Colorschemes ]
+" Bundle { url: "https://github.com/romainl/Apprentice" }
+" Bundle { url: "https://github.com/tokers/magellan" }
+" Bundle { url: "https://github.com/dikiaap/minimalist" }
+" Bundle { url: "https://github.com/NLKNguyen/papercolor-theme" }
+" Bundle { url: "https://github.com/Siltaar/primaries.vim" }
+" Bundle { url: "https://github.com/Lokaltog/vim-distinguished", branch: "develop" }
 " [ Tools to consider ]
 " Bundle { url: "https://github.com/mMontu/VimCalc" }
 " vimproc is required by vim-vebugger
