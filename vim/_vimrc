@@ -183,11 +183,11 @@ call s:AltMapping('n', '', 'w', '<C-w>')
 " Map space to :
 nnoremap <Space> :
 
-" Map A-d to ESC
-call s:AltMapping('nvioc', 'nore', 'd', '<ESC>')
-
 " Edit with precharged wildcards
 call s:AltMapping('n', 'nore', 'e', ':e **/*')
+
+" Disable ZZ (avoid issues with missing '>' key)
+nnoremap ZZ <Nop>
 
 
 "--------------------
@@ -646,34 +646,6 @@ function! s:GenerateUUID()
   endif
 endfunction
 nnoremap Zg :call <SID>GenerateUUID()<CR>
-
-" Zeal (add mappings if installed)
-if executable('zeal')
-  function! s:ZealQuery(word)
-    if &filetype ==# 'cpp'
-      let l:prefix = 'c++'
-    else
-      let l:prefix = &filetype
-    endif
-    if s:is_windows
-      let l:output = system('cmd /C tasklist /FI "IMAGENAME eq zeal.exe" 2>NUL | find /I /N "zeal.exe" >NUL')
-      if v:shell_error
-        " Use !start to avoid a console window
-        exe '!start zeal "' . l:prefix . ':' . a:word . '"'
-      else
-        " Do not use !start here, as it will leave Zeal highlighted in
-        " background (instead of showing the window on top)
-        call system('zeal "' . l:prefix . ':' . a:word . '"')
-      endif
-    else
-      call system('zeal "' . l:prefix . ':' . a:word . '"&')
-    endif
-  endfunction
-  nnoremap ZZ :call <SID>ZealQuery(expand('<cword>'))<CR>
-  command! -nargs=+ -complete=shellcmd ZealQuery call <SID>ZealQuery(<q-args>)
-else
-  nnoremap ZZ <Nop>
-endif
 
 " Toggle transparent background (with F12)
 if $DISPLAY !=# '' && !has('gui_running')
