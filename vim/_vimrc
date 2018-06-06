@@ -14,7 +14,7 @@ endif
 set encoding=utf-8          " Enable utf-8 in Vim
 set backspace=2             " Enable normal backspace behavior
 set number relativenumber   " Set numbers column visible and relative
-set incsearch               " Set incremental search
+set incsearch nohlsearch    " Set incremental search, no highlight
 set formatoptions+=j        " Remove comment char in joining lines
 set fileformats=unix,dos    " Make Vim infer either unix or dos format from file
 set wildignorecase          " Make find/edit cmd-complete ignore case
@@ -82,7 +82,8 @@ else
 endif
 
 " Set nicer colors for complete menu
-highlight Pmenu ctermbg=lightblue ctermfg=black
+highlight Pmenu ctermbg=lightblue ctermfg=black guibg=lightblue guifg=black
+highlight PmenuSel ctermbg=black ctermfg=red guibg=black guifg=red
 
 " Set filename as window title
 set title titlestring=%t
@@ -689,9 +690,6 @@ set guioptions-=L  "remove left-hand scroll bar on vertical split
 
 " Force black background
 highlight Normal guibg=Black
-
-" Set nicer colors for complete menu
-highlight Pmenu guibg=lightblue guifg=black
 
 " Set nicer colors for folding
 highlight Folded guibg=chocolate4 guifg=black
