@@ -248,12 +248,9 @@ if stridx(&rtp, 'vim-javacomplete2') != -1
 endif
 
 " Map uppercase word motion to CamelCaseMotion
-nmap <S-W> <Plug>CamelCaseMotion_w
-omap <S-W> <Plug>CamelCaseMotion_w
-nmap <S-B> <Plug>CamelCaseMotion_b
-omap <S-B> <Plug>CamelCaseMotion_b
-nmap <S-E> <Plug>CamelCaseMotion_e
-omap <S-E> <Plug>CamelCaseMotion_e
+map <S-W> <Plug>CamelCaseMotion_w
+map <S-B> <Plug>CamelCaseMotion_b
+map <S-E> <Plug>CamelCaseMotion_e
 
 " Vim-Sneak
 let g:sneak#streak = 1
