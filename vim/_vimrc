@@ -270,21 +270,15 @@ let s:last_substr = ''
 let s:last_accept = 0
 let s:omni = 0
 function! s:AutoCompleteShow()
-  if s:last_accept
-    let s:last_accept = 0
-    return
-  endif
   let l:pos = getpos('.')
   let l:substr = matchstr(strpart(getline(l:pos[1]), 0, l:pos[2]-1), "[^ \t]*$")
   let l:omni_failed = l:substr ==# s:last_substr && s:omni
-  if (l:substr !=# s:last_substr || l:omni_failed)
+  if !s:last_accept && (l:substr !=# s:last_substr || l:omni_failed)
     let s:last_substr = l:substr
+    let s:omni = 0
     if !pumvisible()
       if l:omni_failed && l:substr =~# '\k\+\(\.\|->\|::\)\k\k\k*$'
-        let s:omni = 0
         return feedkeys("\<c-g>\<c-g>\<c-n>", 'i')
-      elseif l:omni_failed
-        let s:omni = 0
       elseif strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
         let s:omni = 1
         return feedkeys("\<c-x>\<c-o>", 'i')
@@ -295,14 +289,11 @@ function! s:AutoCompleteShow()
       endif
     endif
   endif
+  let s:last_accept = 0
 endfunction
 function! s:AutoCompleteSelect()
-  if pumvisible()
-    let s:last_accept = 1
-    return "\<c-y>"
-  else
-    return "\<cr>"
-  endif
+  let s:last_accept = 1
+  return pumvisible() ? "\<c-y>" : "\<cr>"
 endfunction
 augroup auto_complete
   autocmd!
@@ -449,7 +440,7 @@ function! s:JumpToTag()
   call cursor(0, 0)
   let l:pattern = substitute(l:tag_info[2], '^\/\(.\{-}\)\/;"$', '\1', '')
   call search('\M' . l:pattern)
-  normal _
+  normal! _
 endfunction
 function! s:ShowTags(jump)
   let s:tags = split(system(s:ctags . ' -f - --format=2 --fields=fKs --python-kinds=-i ' . expand('%')), '\n')
