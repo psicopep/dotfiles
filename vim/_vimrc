@@ -263,8 +263,13 @@ let g:sneak#streak = 1
 " AutoComplete
 if has('patch-7.4-775')
   set completeopt=menu,menuone,noinsert
+  let s:noinsert_fix = ''
 else
-  set completeopt=menu,menuone,longest
+  set completeopt=menu,menuone
+  function! g:AutoCompleteDown()
+    return pumvisible() ? "\<Down>" : ''
+  endfunction
+  let s:noinsert_fix = "\<c-p>\<c-r>=g:AutoCompleteDown()\<cr>"
 endif
 let s:last_substr = ''
 let s:last_accept = 0
@@ -278,14 +283,14 @@ function! s:AutoCompleteShow()
     let s:omni = 0
     if !pumvisible()
       if l:omni_failed && l:substr =~# '\k\+\(\.\|->\|::\)\k\k\k*$'
-        return feedkeys("\<c-g>\<c-g>\<c-n>", 'i')
+        return feedkeys("\<c-g>\<c-g>\<c-n>" . s:noinsert_fix, 'i')
       elseif strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
         let s:omni = 1
-        return feedkeys("\<c-x>\<c-o>", 'i')
+        return feedkeys("\<c-x>\<c-o>" . s:noinsert_fix, 'i')
       elseif l:substr =~# '/\k\k\+$'
-        return feedkeys("\<c-x>\<c-f>", 'i')
+        return feedkeys("\<c-x>\<c-f>" . s:noinsert_fix, 'i')
       elseif l:substr =~# '\k\k\+$'
-        return feedkeys("\<c-n>", 'i')
+        return feedkeys("\<c-n>" . s:noinsert_fix, 'i')
       endif
     endif
   endif
