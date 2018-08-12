@@ -71,8 +71,8 @@ endfunction
 " [ Pre/Post install functions ]
 
 function DownloadJedi(install_dir)
-  call s:InstallRepo("https://github.com/davidhalter/jedi", 'bd7c65d9639c2d451d44c6d135b4f6043a918950', a:install_dir . "/pythonx/jedi", "jedi")
-  call s:InstallRepo("https://github.com/davidhalter/parso", '6f385bdba182059e0c46917a414981a6d0894527', a:install_dir . "/pythonx/parso", "parso")
+  call s:InstallRepo("https://github.com/davidhalter/jedi", 'a79a1fbef57564d031c59f47def20a6d9adf3439', a:install_dir . "/pythonx/jedi", "jedi")
+  call s:InstallRepo("https://github.com/davidhalter/parso", 'e6bc924fbabbfa3090044e475c91a7655b9c6e9b', a:install_dir . "/pythonx/parso", "parso")
 endfunction
 
 function CheckOmnisharpRequirements()
