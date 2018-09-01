@@ -187,6 +187,10 @@ call s:AltMapping('n', 'nore', 'e', ':e **/*')
 " Disable ZZ (avoid issues with missing '>' key)
 nnoremap ZZ <Nop>
 
+" Alt mappings for search
+call s:AltMapping('n', 'nore', '-', '/')
+call s:AltMapping('n', 'nore', '_', '?')
+
 
 "--------------------
 " Plugins Config
