@@ -284,7 +284,7 @@ function! s:AutoCompleteShow()
     if !pumvisible()
       if l:omni_failed && l:substr =~# '\k\+\(\.\|->\|::\)\k\k\k*$'
         return feedkeys("\<c-g>\<c-g>\<c-n>" . s:noinsert_fix, 'i')
-      elseif strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
+      elseif !l:omni_failed && strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
         let s:omni = 1
         return feedkeys("\<c-x>\<c-o>" . s:noinsert_fix, 'i')
       elseif l:substr =~# '/\k\k\+$'
