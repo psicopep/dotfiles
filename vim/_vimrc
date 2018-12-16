@@ -155,25 +155,23 @@ call s:AltMapping('n', 'nore', 's', ':ls<cr>:b ')
 nnoremap <C-k> :cp<cr>
 nnoremap <C-j> :cn<cr>
 
-" Insert mode jk for autocompletion
-function! s:insert_alt_j()
-  return pumvisible() ? "\<Down>" : "\<ESC>j"
+" Insert mode TAB for autocompletion
+function! s:insert_tab()
+  return pumvisible() ? "\<c-n>" : "\<Tab>"
 endfunction
-function! s:insert_alt_k()
-  return pumvisible() ? "\<Up>" : "\<ESC>k"
+function! s:insert_s_tab()
+  return pumvisible() ? "\<c-p>" : "\<S-Tab>"
 endfunction
-call s:AltMapping('i', 'nore', 'j', '<C-r>=<SID>insert_alt_j()<CR>')
-call s:AltMapping('i', 'nore', 'k', '<C-r>=<SID>insert_alt_k()<CR>')
+inoremap <Tab> <C-r>=<SID>insert_tab()<CR>
+inoremap <S-Tab> <C-r>=<SID>insert_s_tab()<CR>
 
 " Normal mode jk as page down / page up
 call s:AltMapping('nv', 'nore', 'j', '<PageDown>')
 call s:AltMapping('nv', 'nore', 'k', '<PageUp>')
 
 " Map ñ to ; and Ñ to :
-nmap Ñ :
-vmap Ñ :
-nmap ñ ;
-vmap ñ ;
+map Ñ :
+map ñ ;
 
 " Map A-w to C-w for easier window navigation
 call s:AltMapping('n', '', 'w', '<C-w>')
@@ -261,16 +259,8 @@ let g:sneak#streak = 1
 "--------------------
 
 " AutoComplete
-if has('patch-7.4-775')
-  set completeopt=menu,menuone,noinsert
-  let s:noinsert_fix = ''
-else
-  set completeopt=menu,menuone
-  function! g:AutoCompleteDown()
-    return pumvisible() ? "\<Down>" : ''
-  endfunction
-  let s:noinsert_fix = "\<c-p>\<c-r>=g:AutoCompleteDown()\<cr>"
-endif
+set completeopt=menu,menuone
+let s:noinsert_fix = "\<c-p>"
 let s:last_substr = ''
 let s:last_accept = 0
 let s:omni = 0
@@ -296,15 +286,10 @@ function! s:AutoCompleteShow()
   endif
   let s:last_accept = 0
 endfunction
-function! s:AutoCompleteSelect()
-  let s:last_accept = 1
-  return pumvisible() ? "\<c-y>" : "\<cr>"
-endfunction
 augroup auto_complete
   autocmd!
   autocmd TextChangedI * noautocmd call <SID>AutoCompleteShow()
 augroup END
-inoremap <silent> <CR> <C-r>=<SID>AutoCompleteSelect()<CR>
 inoremap <silent> <expr> <BS> "\<c-g>\<c-g>\<BS>"
 
 " Grep (with ripgrep if available)
@@ -397,10 +382,14 @@ function! s:AutoMark()
   let l:mark = nr2char(getchar())
   redraw
   if l:mark ==# 'j'
-    exe 'marks ' . join(s:all_marks, ',') . '<cr>'
-    let l:mark = nr2char(getchar())
-    redraw
-    execute "normal! '" . l:mark
+    try
+      exe 'marks ' . join(s:all_marks, ',') . '<cr>'
+      let l:mark = nr2char(getchar())
+      redraw
+      execute "normal! '" . l:mark
+    catch /^Vim\%((\a\+)\)\=:E283/
+      echo 'No automarks found'
+    endtry
   else
     if l:mark ==# 'm'
       let l:mark = remove(b:next_marks, 0)
@@ -431,10 +420,10 @@ function! s:HLNext (blinktime)
   set invcursorline invcursorcolumn
   redraw
 endfunction
-nnoremap <silent> *   *:call <SID>HLNext(0.4)<cr>
-nnoremap <silent> #   #:call <SID>HLNext(0.4)<cr>
-nnoremap <silent> n   n:call <SID>HLNext(0.4)<cr>
-nnoremap <silent> N   N:call <SID>HLNext(0.4)<cr>
+nnoremap <silent> *   *:call <SID>HLNext(0.1)<cr>
+nnoremap <silent> #   #:call <SID>HLNext(0.1)<cr>
+nnoremap <silent> n   n:call <SID>HLNext(0.1)<cr>
+nnoremap <silent> N   N:call <SID>HLNext(0.1)<cr>
 
 " Tags
 let s:ctags = s:is_windows ? s:vimrcdir . '/ctags58/ctags.exe' : 'ctags'
@@ -489,32 +478,21 @@ function! s:GetVenvDirsAndVer(virtualenv)
 endfunction
 function! s:SetupVirtualEnv(virtualenv) abort
   let [l:bin, l:lib, l:python3] = s:GetVenvDirsAndVer(a:virtualenv)
-  if l:python3 && has('python3')
-    python3 import sys, os, vim
-    python3 sys.path.insert(0, vim.eval('l:lib'))
-    python3 os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
+  if (l:python3 && has('python3')) || (!l:python3 && has('python'))
+    pythonx import sys, os, vim
+    pythonx sys.path.insert(0, vim.eval('l:lib'))
+    pythonx os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
     " NOTE: We need to force Jedi's Python version because it may have been
     "       auto setup to a wrong version.
-    let g:jedi#force_py_version = 3
-  elseif !l:python3 && has('python')
-    python import sys, os, vim
-    python sys.path.insert(0, vim.eval('l:lib'))
-    python os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
-    " NOTE: We need to force Jedi's Python version because it may have been
-    "       auto setup to a wrong version.
-    let g:jedi#force_py_version = 2
+    let g:jedi#force_py_version = l:python3 ? 3 : 2
   endif
 endfunction
 function! s:TearDownVirtualEnv(virtualenv) abort
   let [l:bin, l:lib, l:python3] = s:GetVenvDirsAndVer(a:virtualenv)
-  if l:python3 && has('python3')
-    python3 import vim, sys, os
-    python3 sys.path.remove(vim.eval('l:lib'))
-    python3 os.environ['PATH'] = os.environ['PATH'].replace(vim.eval('l:bin') + os.pathsep, '')
-  elseif !l:python3 && has('python')
-    python import sys, vim
-    python sys.path.remove(vim.eval('l:lib'))
-    python os.environ['PATH'] = os.environ['PATH'].replace(vim.eval('l:bin') + os.pathsep, '')
+  if (l:python3 && has('python3')) || (!l:python3 && has('python'))
+    pythonx import vim, sys, os
+    pythonx sys.path.remove(vim.eval('l:lib'))
+    pythonx os.environ['PATH'] = os.environ['PATH'].replace(vim.eval('l:bin') + os.pathsep, '')
   endif
   " TODO: See if there is a way to restore Jedi's Python version to before forcing it
 endfunction
@@ -552,7 +530,7 @@ function! s:SetupProject()
       match Excess /\%120v.*/
       setlocal nowrap textwidth=119
       " Ignore venv in file completion
-      set wildignore+=venv/*
+      set wildignore+=venv*/*
     endif
   endif
 endfunction
@@ -630,13 +608,7 @@ nnoremap <F10> :call <SID>DebugQuit()<CR>
 
 " GUID Generator (this places a random guid in unnamedplus register)
 function! s:GenerateUUID()
-  if has('python3')
-      python3 import vim, uuid
-      python3 vim.command('let @+ = "%s"' % str(uuid.uuid4()))
-  elseif has('python')
-      python import vim, uuid
-      python vim.command('let @+ = "%s"' % str(uuid.uuid4()))
-  endif
+    pythonx import uuid; vim.command('let @+ = "%s"' % str(uuid.uuid4()))
 endfunction
 nnoremap Zg :call <SID>GenerateUUID()<CR>
 
