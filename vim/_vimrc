@@ -478,21 +478,32 @@ function! s:GetVenvDirsAndVer(virtualenv)
 endfunction
 function! s:SetupVirtualEnv(virtualenv) abort
   let [l:bin, l:lib, l:python3] = s:GetVenvDirsAndVer(a:virtualenv)
-  if (l:python3 && has('python3')) || (!l:python3 && has('python'))
-    pythonx import sys, os, vim
-    pythonx sys.path.insert(0, vim.eval('l:lib'))
-    pythonx os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
+  if l:python3 && has('python3')
+    python3 import sys, os, vim
+    python3 sys.path.insert(0, vim.eval('l:lib'))
+    python3 os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
     " NOTE: We need to force Jedi's Python version because it may have been
     "       auto setup to a wrong version.
-    let g:jedi#force_py_version = l:python3 ? 3 : 2
+    let g:jedi#force_py_version = 3
+  elseif !l:python3 && has('python')
+    python import sys, os, vim
+    python sys.path.insert(0, vim.eval('l:lib'))
+    python os.environ['PATH'] = vim.eval('l:bin') + os.pathsep + os.environ['PATH']
+    " NOTE: We need to force Jedi's Python version because it may have been
+    "       auto setup to a wrong version.
+    let g:jedi#force_py_version = 2
   endif
 endfunction
 function! s:TearDownVirtualEnv(virtualenv) abort
   let [l:bin, l:lib, l:python3] = s:GetVenvDirsAndVer(a:virtualenv)
-  if (l:python3 && has('python3')) || (!l:python3 && has('python'))
-    pythonx import vim, sys, os
-    pythonx sys.path.remove(vim.eval('l:lib'))
-    pythonx os.environ['PATH'] = os.environ['PATH'].replace(vim.eval('l:bin') + os.pathsep, '')
+  if l:python3 && has('python3')
+    python3 import vim, sys, os
+    python3 sys.path.remove(vim.eval('l:lib'))
+    python3 os.environ['PATH'] = os.environ['PATH'].replace(vim.eval('l:bin') + os.pathsep, '')
+  elseif !l:python3 && has('python')
+    python import vim, sys, os
+    python sys.path.remove(vim.eval('l:lib'))
+    python os.environ['PATH'] = os.environ['PATH'].replace(vim.eval('l:bin') + os.pathsep, '')
   endif
   " TODO: See if there is a way to restore Jedi's Python version to before forcing it
 endfunction
@@ -608,7 +619,11 @@ nnoremap <F10> :call <SID>DebugQuit()<CR>
 
 " GUID Generator (this places a random guid in unnamedplus register)
 function! s:GenerateUUID()
-    pythonx import uuid; vim.command('let @+ = "%s"' % str(uuid.uuid4()))
+  if has('python3')
+    python3 import uuid; vim.command('let @+ = "%s"' % str(uuid.uuid4()))
+  elseif has('python')
+    python import uuid; vim.command('let @+ = "%s"' % str(uuid.uuid4()))
+  endif
 endfunction
 nnoremap Zg :call <SID>GenerateUUID()<CR>
 
