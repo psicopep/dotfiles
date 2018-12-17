@@ -76,6 +76,7 @@ elseif s:is_windows && !has('gui_running')
 else
   try
     colorscheme angr
+    highlight Normal ctermbg=None guibg=Black
     highlight LineNr ctermbg=None guibg=Black
   catch /^Vim\%((\a\+)\)\=:E185/
     colorscheme torte
@@ -227,13 +228,6 @@ if stridx(&rtp, 'omnisharp-vim') != -1
     autocmd FileType cs nnoremap Qs :OmniSharpFindSymbol<cr>
     autocmd FileType cs nnoremap Qu :OmniSharpFindUsages<cr>
     autocmd FileType cs nnoremap Qm :OmniSharpFindMembers<cr> "finds members in the current buffer
-    " cursor can be anywhere on the line containing an issue 
-    autocmd FileType cs nnoremap <leader>x  :OmniSharpFixIssue<cr>  
-    autocmd FileType cs nnoremap <leader>fx :OmniSharpFixUsings<cr>
-    autocmd FileType cs nnoremap <leader>tt :OmniSharpTypeLookup<cr>
-    autocmd FileType cs nnoremap <leader>dc :OmniSharpDocumentation<cr>
-    " autocmd FileType cs nnoremap <C-K> :OmniSharpNavigateUp<cr> "navigate up by method/property/field
-    " autocmd FileType cs nnoremap <C-J> :OmniSharpNavigateDown<cr> "navigate down by method/property/field
   augroup END
 endif
 
@@ -552,68 +546,6 @@ augroup END
 
 
 "--------------------
-" Debugging Support
-"--------------------
-
-" Set Debugging defaults
-let s:debug_started = 0
-let s:debug_running = 0
-function! s:DebugStart() abort
-  if &filetype ==# 'python'
-    call inputsave()
-    let l:program_name = input('Debug Program (' . expand('%:p') . '): ')
-    call inputrestore()
-    if l:program_name ==# ''
-      exe 'VBGstartPDB2 %:p'
-    else
-      exe 'VBGstartPDB2 ' . l:program_name
-    endif
-    let s:debug_started = 1
-    let s:debug_running = 1
-  else
-    call inputsave()
-    if exists('g:debug_program_cmd')
-      let l:input_string = input('Debug Program (' . g:debug_program_cmd . '): ')
-    else
-      let l:input_string = input('Debug Program: ')
-    endif
-    call inputrestore()
-    if l:input_string ==# '' && exists('g:debug_program_cmd')
-      let l:input_string = g:debug_program_cmd
-    endif
-    if l:input_string !=# ''
-      exe 'VBGstartGDB ' . l:input_string
-      let s:debug_started = 1
-      let s:debug_running = 1
-    endif
-  endif
-endfunction
-function! s:DebugContinue() abort
-  if !s:debug_started
-    call s:DebugStart()
-  elseif s:debug_running
-    exe 'VBGcontinue'
-  endif
-endfunction
-function! s:DebugQuit() abort
-  exe 'VBGkill'
-  let s:debug_started = 0
-endfunction
-augroup debugging_autocmds
-  autocmd!
-  autocmd FileType python,c,cpp map <F5> :call <SID>DebugContinue()<CR>
-augroup END
-nnoremap <F6> :VBGstepOver<CR>
-nnoremap <S-F6> :VBGstepIn<CR>
-nnoremap <F7> :VBGstepIn<CR>
-nnoremap <F8> :VBGtoggleBreakpointThisLine<CR>
-nnoremap <S-F8> :VBGclearBreakpoints<CR>
-nnoremap <F9> :VBGclearBreakpoints<CR>
-nnoremap <S-F5> :call <SID>DebugQuit()<CR>
-nnoremap <F10> :call <SID>DebugQuit()<CR>
-
-
-"--------------------
 " Miscelaneous
 "--------------------
 
@@ -626,25 +558,6 @@ function! s:GenerateUUID()
   endif
 endfunction
 nnoremap Zg :call <SID>GenerateUUID()<CR>
-
-" Toggle transparent background (with F12)
-if $DISPLAY !=# '' && !has('gui_running')
-  let s:is_transparent = 0
-  function! s:ToggleTransparent()
-    if s:is_transparent
-      highlight Normal ctermbg=Black
-      let s:is_transparent = 0
-    else
-      highlight Normal ctermbg=none
-      highlight Comment ctermbg=none
-      let s:is_transparent = 1
-    endif
-  endfunction
-  nnoremap <silent> <F12> :call <SID>ToggleTransparent()<CR>
-  if $TERM_TRANSPARENT == 1
-    call s:ToggleTransparent()
-  endif
-endif
 
 
 "--------------------
@@ -666,9 +579,6 @@ set guioptions-=r  "remove right-hand scroll bar
 set guioptions-=R  "remove right-hand scroll bar on vertical split
 set guioptions-=l  "remove left-hand scroll bar
 set guioptions-=L  "remove left-hand scroll bar on vertical split
-
-" Force black background
-highlight Normal guibg=Black
 
 " Set nicer colors for folding
 highlight Folded guibg=chocolate4 guifg=black
