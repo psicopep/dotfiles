@@ -150,45 +150,36 @@ nnoremap Q <Nop>
 set hidden
 cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'bd' : 'q')<CR>
 cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
-call s:AltMapping('n', 'nore', 's', ':ls<cr>:b ')
+nnoremap <Space>s :ls<cr>:b 
 
 " Nicer QuickFix Navigation
 nnoremap <C-k> :cp<cr>
 nnoremap <C-j> :cn<cr>
 
 " Insert mode TAB for autocompletion
-function! s:insert_tab()
-  return pumvisible() ? "\<c-n>" : "\<Tab>"
-endfunction
-function! s:insert_s_tab()
-  return pumvisible() ? "\<c-p>" : "\<S-Tab>"
-endfunction
-inoremap <Tab> <C-r>=<SID>insert_tab()<CR>
-inoremap <S-Tab> <C-r>=<SID>insert_s_tab()<CR>
-
-" Normal mode jk as page down / page up
-call s:AltMapping('nv', 'nore', 'j', '<PageDown>')
-call s:AltMapping('nv', 'nore', 'k', '<PageUp>')
+inoremap <expr> <Tab> pumvisible() ? "\<c-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<c-p>" : "\<S-Tab>"
 
 " Map ñ to ; and Ñ to :
 map Ñ :
 map ñ ;
 
-" Map A-w to C-w for easier window navigation
-call s:AltMapping('n', '', 'w', '<C-w>')
+" Map double space to :
+nnoremap <Space><Space> :
 
-" Map space to :
-nnoremap <Space> :
+" Map space+q and space+w shortcuts
+nnoremap <Space>q :q
+nnoremap <Space>w :w
 
 " Edit with precharged wildcards
-call s:AltMapping('n', 'nore', 'e', ':e **/*')
+nnoremap <Space>e :e **/*
 
 " Disable ZZ (avoid issues with missing '>' key)
 nnoremap ZZ <Nop>
 
-" Alt mappings for search
-call s:AltMapping('n', 'nore', '-', '/')
-call s:AltMapping('n', 'nore', '_', '?')
+" Alt mappings for search in latam keyboards
+" call s:AltMapping('n', 'nore', '-', '/')
+" call s:AltMapping('n', 'nore', '_', '?')
 
 
 "--------------------
@@ -196,8 +187,9 @@ call s:AltMapping('n', 'nore', '_', '?')
 "--------------------
 
 " SimpleTree
-call s:AltMapping('n', 'nore', 'f', ':SimpleTreeToggle<CR>')
+nnoremap <Space>f :SimpleTreeToggle<CR>
 let g:simpletree_use_arrows = 1
+let g:simpletree_close_on_esc = 1
 
 " Jedi
 let g:jedi#auto_initialization = 1
@@ -447,8 +439,8 @@ function! s:ShowTags(jump)
     call feedkeys('/')
   endif
 endfunction
-call s:AltMapping('n', 'nore', 't', ':call <SID>ShowTags(0)<CR>')
-call s:AltMapping('n', 'nore', 'g', ':call <SID>ShowTags(1)<CR>')
+nnoremap <Space>t :call <SID>ShowTags(0)<CR>
+nnoremap <Space>g :call <SID>ShowTags(1)<CR>
 
 
 "--------------------
