@@ -253,7 +253,14 @@ let s:omni = 0
 function! s:AutoCompleteShow()
   let l:pos = getpos('.')
   let l:substr = matchstr(strpart(getline(l:pos[1]), 0, l:pos[2]-1), "[^ \t]*$")
-  let l:omni_failed = l:substr ==# s:last_substr && s:omni
+  let l:omni_exists = 0
+  try
+    exec 'call ' . &omnifunc . '()'
+  catch /E119/
+    let l:omni_exists = 1
+  catch
+  endtry
+  let l:omni_failed = !omni_exists || (l:substr ==# s:last_substr && s:omni)
   if !s:last_accept && (l:substr !=# s:last_substr || l:omni_failed)
     let s:last_substr = l:substr
     let s:omni = 0
