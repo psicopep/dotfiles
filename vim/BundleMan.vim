@@ -25,7 +25,7 @@ let TAKE_OWNERSHIP = 1
 function BundleList()
 Bundle { url: "https://github.com/zacanger/angr.vim" }
 Bundle { url: "https://github.com/bkad/CamelCaseMotion" }
-Bundle { url: "https://github.com/davidhalter/jedi-vim", post_install: "DownloadJedi" }
+Bundle { url: "https://github.com/davidhalter/jedi-vim", pre_install: "HasPython", post_install: "DownloadJedi" }
 Bundle { url: "https://github.com/psicopep/simpletree" }
 Bundle { url: "https://github.com/tpope/vim-commentary" }
 Bundle { url: "https://github.com/justinmk/vim-sneak", post_install: "PatchVimSneak" }
@@ -69,6 +69,10 @@ endfunction
 
 
 " [ Pre/Post install functions ]
+
+function HasPython()
+  return has('python3') || has('python')
+endfunction
 
 function DownloadJedi(install_dir)
   call s:InstallRepo("https://github.com/davidhalter/jedi", 'a79a1fbef57564d031c59f47def20a6d9adf3439', a:install_dir . "/pythonx/jedi", "jedi")
