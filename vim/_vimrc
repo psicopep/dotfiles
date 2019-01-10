@@ -260,14 +260,14 @@ function! s:AutoCompleteShow()
     let l:omni_exists = 1
   catch
   endtry
-  let l:omni_failed = !omni_exists || (l:substr ==# s:last_substr && s:omni)
+  let l:omni_failed = l:substr ==# s:last_substr && s:omni
   if !s:last_accept && (l:substr !=# s:last_substr || l:omni_failed)
     let s:last_substr = l:substr
     let s:omni = 0
     if !pumvisible()
-      if l:omni_failed && l:substr =~# '\k\+\(\.\|->\|::\)\k\k\k*$'
+      if l:omni_exists && l:omni_failed && l:substr =~# '\k\+\(\.\|->\|::\)\k\k\k*$'
         return feedkeys("\<c-g>\<c-g>\<c-n>" . s:noinsert_fix, 'i')
-      elseif !l:omni_failed && strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
+      elseif l:omni_exists && !l:omni_failed && strlen(&l:omnifunc) > 0 && l:substr =~# '\k\+\(\.\|->\|::\)\k*$'
         let s:omni = 1
         return feedkeys("\<c-x>\<c-o>" . s:noinsert_fix, 'i')
       elseif l:substr =~# '/\k\k\+$'
