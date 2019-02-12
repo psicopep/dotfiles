@@ -2,6 +2,7 @@
 let s:vimrcdir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 let s:vimfiles = s:vimrcdir . '/vimfiles'
 let s:is_windows = has('win32') || has('win64')
+let s:is_gui = has('gui_running')
 
 
 "--------------------
@@ -69,18 +70,14 @@ endif
 "--------------------
 
 " Set color scheme
-if $DISPLAY ==# '' && !s:is_windows
-  colorscheme torte
-elseif s:is_windows && !has('gui_running')
+if ($DISPLAY !=# '' || (s:is_windows && s:is_gui)) && stridx(&rtp, 'angr.vim') != -1
+  colorscheme angr
+  highlight Normal ctermbg=None guibg=Black
+  highlight LineNr ctermbg=None guibg=Black
+elseif s:is_windows && !s:is_gui
   colorscheme default
 else
-  try
-    colorscheme angr
-    highlight Normal ctermbg=None guibg=Black
-    highlight LineNr ctermbg=None guibg=Black
-  catch /^Vim\%((\a\+)\)\=:E185/
-    colorscheme torte
-  endtry
+  colorscheme torte
 endif
 
 " Set nicer colors for complete menu
@@ -134,14 +131,14 @@ autocmd visuals FileType * setlocal completeopt-=preview
 "--------------------
 
 " Alt mapping helper
-function! s:AltMapping(modes, nore, keys, expression)
-  for l:mode in split(a:modes, '\zs')
-    exec l:mode . a:nore . 'map ' . '<A-' . a:keys . '> ' . a:expression
-    if !has('gui_running')
-      exec l:mode . a:nore . 'map ' . '' . a:keys . ' ' . a:expression
-    endif
-  endfor
-endfunction
+" function! s:AltMapping(modes, nore, keys, expression)
+"   for l:mode in split(a:modes, '\zs')
+"     exec l:mode . a:nore . 'map ' . '<A-' . a:keys . '> ' . a:expression
+"     if !s:is_gui
+"       exec l:mode . a:nore . 'map ' . '' . a:keys . ' ' . a:expression
+"     endif
+"   endfor
+" endfunction
 
 " Disable annoying ex mode
 nnoremap Q <Nop>
@@ -192,11 +189,7 @@ let g:simpletree_use_arrows = 1
 let g:simpletree_close_on_esc = 1
 
 " Jedi
-let g:jedi#auto_initialization = 1
-let g:jedi#completions_enabled = 1
 let g:jedi#popup_on_dot = 0
-let g:jedi#popup_select_first = 1
-let g:jedi#use_tabs_not_buffers = 0
 let g:jedi#goto_command = 'Qd'
 let g:jedi#goto_assignments_command = 'Qa'
 let g:jedi#documentation_command = 'Qh'
@@ -230,14 +223,6 @@ if stridx(&rtp, 'vim-javacomplete2') != -1
     autocmd FileType java setlocal omnifunc=javacomplete#Complete
   augroup END
 endif
-
-" Map uppercase word motion to CamelCaseMotion
-map <S-W> <Plug>CamelCaseMotion_w
-map <S-B> <Plug>CamelCaseMotion_b
-map <S-E> <Plug>CamelCaseMotion_e
-
-" Vim-Sneak
-let g:sneak#streak = 1
 
 
 "--------------------
@@ -286,60 +271,50 @@ augroup END
 inoremap <silent> <expr> <BS> "\<c-g>\<c-g>\<BS>"
 
 " Grep (with ripgrep if available)
-if s:is_windows
-  " Use ripgrep in Vim folder
-  let s:rg_path = s:vimrcdir . '/ripgrep-0.8.1/'
-  let &grepprg = s:rg_path . 'rg --vimgrep --no-heading'
-  set grepformat=%f:%l:%c:%m,%f:%l:%m
-elseif executable('rg')
-  " Use global ripgrep
-  let &grepprg = 'rg --vimgrep --no-heading'
+let s:rg_path = s:is_windows ? s:vimrcdir . '/ripgrep-0.8.1/rg' : 'rg'
+if executable(s:rg_path)
+  let &grepprg = s:rg_path . ' --vimgrep --no-heading'
   set grepformat=%f:%l:%c:%m,%f:%l:%m
 endif
 command! -nargs=+ Grep :silent grep! <args> | cwindow | redraw!
 
 " Linting
-let s:lint_marks = {}
-let s:lint_texts = {}
-sign define piet text=>> texthl=Search
-function! s:SetLintMarks() " Chunks unashamedly borrowed from errormarker.vim
-  if !has('signs')
-    return
-  endif
-  for l:key in keys(s:lint_marks)
-    execute ':sign unplace ' . l:key
-  endfor
+if has('signs')
   let s:lint_marks = {}
-  let s:lint_texts = {}
-  for l:d in getqflist()
-    if (l:d.bufnr == 0 || l:d.lnum == 0)
-      continue
-    endif
-    let l:key = l:d.bufnr . l:d.lnum
+  sign define piet text=>> texthl=Search
+  function! s:SetLintMarks() " Chunks unashamedly borrowed from errormarker.vim
+    for l:key in keys(s:lint_marks)
+      execute ':sign unplace ' . l:key
+    endfor
+    let s:lint_marks = {}
+    for l:d in getqflist()
+      let l:key = l:d.bufnr . l:d.lnum
+      if (l:d.bufnr == 0 || l:d.lnum == 0 || has_key(s:lint_marks, l:key))
+        continue
+      endif
+      let s:lint_marks[l:key] = l:d.text
+      execute ':sign place ' . l:key . ' line=' . l:d.lnum . ' name=piet'
+            \ . ' buffer=' . l:d.bufnr
+    endfor
+  endfunction
+  function! s:ShowLintText() " Bits inspired by Syntastic
+    let l:key = bufnr('%') . line('.')
     if has_key(s:lint_marks, l:key)
-      continue
+      let l:msg = s:lint_marks[l:key]
+      let l:msg = substitute(l:msg, "\n", '', 'g')
+      let l:chunks = split(l:msg, "\t", 1)
+      let l:msg = join(l:chunks[:-2], ' ') . ' ' . l:chunks[-1]
+      " Cut down msg to avoid conflict with showcmd
+      let l:msg = strpart(l:msg, 0, &columns - (&showcmd ? 12 : 1))
+      echo l:msg
+    else
+      echo ''
     endif
-    let s:lint_marks[l:key] = 1
-    execute ':sign place ' . l:key . ' line=' . l:d.lnum . ' name=piet'
-          \ . ' buffer=' . l:d.bufnr
-    let s:lint_texts[l:key] = l:d.text
-  endfor
-endfunction
-function! s:ShowLintText() " Bits inspired by Syntastic
-  let l:key = bufnr('%') . line('.')
-  if has_key(s:lint_texts, l:key)
-    let l:msg = s:lint_texts[l:key]
-    let l:msg = substitute(l:msg, "\n", '', 'g')
-    let l:chunks = split(l:msg, "\t", 1)
-    let l:msg = join(l:chunks[:-2], ' ') . ' ' . l:chunks[-1]
-    " Cut down msg to avoid conflict with showcmd
-    let l:msg = strpart(l:msg, 0, &columns - (&showcmd ? 12 : 1))
-    echo l:msg
-  else
-    echo ''
-  endif
-endfunction
-command! -nargs=0 Lint :silent! make! | call <SID>SetLintMarks() | redraw!
+  endfunction
+  command! -nargs=0 Lint :silent! make! | call <SID>SetLintMarks() | redraw!
+else
+  command! -nargs=0 Lint :silent! make! | cwindow | redraw!
+endif
 function! s:GetPyLint()
   if filereadable('venv/bin/pylint')
     return 'venv/bin/pylint'
@@ -383,7 +358,7 @@ function! s:AutoMark()
     catch /^Vim\%((\a\+)\)\=:E283/
       echo 'No automarks found'
     endtry
-  else
+  elseif l:mark !=# ''
     if l:mark ==# 'm'
       let l:mark = remove(b:next_marks, 0)
     else
@@ -401,7 +376,6 @@ augroup NoSimultaneousEdits
   autocmd!
   autocmd SwapExists * let v:swapchoice = 'o'
   autocmd SwapExists * echo 'Duplicate edit session (readonly)'
-  autocmd SwapExists * echohl None
   autocmd SwapExists * sleep 2
 augroup END
 
@@ -563,7 +537,7 @@ nnoremap Zg :call <SID>GenerateUUID()<CR>
 " GVIMRC
 "--------------------
 
-if has('gui_running')
+if s:is_gui
 
 " Set Font
 if s:is_windows

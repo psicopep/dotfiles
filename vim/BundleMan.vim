@@ -24,11 +24,9 @@ let TAKE_OWNERSHIP = 1
 
 function BundleList()
 Bundle { url: "https://github.com/zacanger/angr.vim" }
-Bundle { url: "https://github.com/bkad/CamelCaseMotion" }
 Bundle { url: "https://github.com/davidhalter/jedi-vim", pre_install: "HasPython", post_install: "DownloadJedi" }
 Bundle { url: "https://github.com/psicopep/simpletree" }
 Bundle { url: "https://github.com/tpope/vim-commentary" }
-Bundle { url: "https://github.com/justinmk/vim-sneak", post_install: "PatchVimSneak" }
 Bundle { url: "https://github.com/tpope/vim-surround" }
 " [ Additional languages support ]
 " Bundle { url: "https://github.com/OmniSharp/omnisharp-vim", pre_install: "CheckOmnisharpRequirements", post_install: "BuildOmnisharpServer" }
@@ -52,6 +50,8 @@ Bundle { url: "https://github.com/tpope/vim-surround" }
 " Bundle { url: "https://github.com/Shougo/vinarise.vim" }
 " Bundle { url: "https://github.com/diepm/vim-rest-console" }
 " [ Deprecated (keep them listed in case we change our minds) ]
+" Bundle { url: "https://github.com/bkad/CamelCaseMotion" }
+" Bundle { url: "https://github.com/justinmk/vim-sneak", post_install: "PatchVimSneak" }
 " Bundle { url: "https://github.com/Yggdroot/indentLine" }
 " Bundle { url: "https://github.com/ctrlpvim/ctrlp.vim" }
 " Bundle { url: "https://github.com/majutsushi/tagbar" }
