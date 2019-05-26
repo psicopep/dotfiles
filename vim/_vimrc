@@ -14,11 +14,18 @@ if &compatible
 endif
 set encoding=utf-8          " Enable utf-8 in Vim
 set backspace=2             " Enable normal backspace behavior
-set number relativenumber   " Set numbers column visible and relative
+set number                  " Set numbers column visible and relative
+if exists("&relativenumber")
+  set relativenumber
+endif
 set incsearch nohlsearch    " Set incremental search, no highlight
-set formatoptions+=j        " Remove comment char in joining lines
+if has("patch-7.3-541")
+  set formatoptions+=j      " Remove comment char in joining lines
+endif
 set fileformats=unix,dos    " Make Vim infer either unix or dos format from file
-set wildignorecase          " Make find/edit cmd-complete ignore case
+if exists("&wildignorecase")
+  set wildignorecase        " Make find/edit cmd-complete ignore case
+endif
 " Lower priority of some files on cmd-complete
 set suffixes=.bak,~,.swp,.o,.obj,.pyc,.png,.jpg,.html,.out,.log,.jsonlog
 
@@ -35,7 +42,7 @@ set showcmd
 " Enable binding to system clipboard
 if s:is_windows
   set clipboard=unnamed
-else
+elseif has("patch-7.3-074")
   set clipboard=unnamedplus
 endif
 
@@ -266,7 +273,11 @@ function! s:AutoCompleteShow()
 endfunction
 augroup auto_complete
   autocmd!
-  autocmd TextChangedI * noautocmd call <SID>AutoCompleteShow()
+  if has("patch-7.3-867")
+    autocmd TextChangedI * noautocmd call <SID>AutoCompleteShow()
+  else
+    autocmd CursorMovedI * noautocmd call <SID>AutoCompleteShow()
+  endif
 augroup END
 inoremap <silent> <expr> <BS> "\<c-g>\<c-g>\<BS>"
 
