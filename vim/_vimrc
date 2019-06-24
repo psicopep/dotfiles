@@ -1,6 +1,5 @@
 " Set a few helpful variables
 let s:vimrcdir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
-let s:vimfiles = s:vimrcdir . '/vimfiles'
 let s:is_windows = has('win32') || has('win64')
 let s:is_gui = has('gui_running')
 
@@ -9,9 +8,8 @@ let s:is_gui = has('gui_running')
 " Basics
 "--------------------
 
-if &compatible
-  set nocompatible          " Enable Vim enhancements
-endif
+set hidden                  " Allow hidden buffers
+set nomodeline              " Disable modeline for security reasons
 set encoding=utf-8          " Enable utf-8 in Vim
 set backspace=2             " Enable normal backspace behavior
 set number                  " Set numbers column visible and relative
@@ -30,8 +28,6 @@ endif
 set suffixes=.bak,~,.swp,.o,.obj,.pyc,.png,.jpg,.html,.out,.log,.jsonlog
 
 " Avoid delays with ESC in terminal
-" NOTE: ttimeoutlen is used for key codes. I don't think I use it,
-"       but if something stop working, we should try another values.
 set timeoutlen=600 ttimeoutlen=0
 
 " Show partial command in command line
@@ -60,7 +56,7 @@ set indentkeys-=:
 "--------------------
 
 " Load bundles
-let s:bundleman_rtp = s:vimfiles . '/BundleMan_rtp.vim'
+let s:bundleman_rtp = s:vimrcdir . '/vimfiles/BundleMan_rtp.vim'
 if filereadable(s:bundleman_rtp)
   exec 'source ' . s:bundleman_rtp
 endif
@@ -137,21 +133,10 @@ autocmd visuals FileType * setlocal completeopt-=preview
 " Mappings
 "--------------------
 
-" Alt mapping helper
-" function! s:AltMapping(modes, nore, keys, expression)
-"   for l:mode in split(a:modes, '\zs')
-"     exec l:mode . a:nore . 'map ' . '<A-' . a:keys . '> ' . a:expression
-"     if !s:is_gui
-"       exec l:mode . a:nore . 'map ' . '' . a:keys . ' ' . a:expression
-"     endif
-"   endfor
-" endfunction
-
 " Disable annoying ex mode
 nnoremap Q <Nop>
 
 " Nicer Buffer Navigation
-set hidden
 cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'bd' : 'q')<CR>
 cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
 nnoremap <Space>s :ls<cr>:b 
@@ -164,12 +149,9 @@ nnoremap <C-j> :cn<cr>
 inoremap <expr> <Tab> pumvisible() ? "\<c-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<c-p>" : "\<S-Tab>"
 
-" Map ñ to ; and Ñ to :
-map Ñ :
-map ñ ;
-
-" Map double space to :
+" Map double space and space ; to :
 nnoremap <Space><Space> :
+nnoremap <Space>; :
 
 " Map space+q and space+w shortcuts
 nnoremap <Space>q :q
@@ -178,12 +160,12 @@ nnoremap <Space>w :w
 " Edit with precharged wildcards
 nnoremap <Space>e :e **/*
 
-" Disable ZZ (avoid issues with missing '>' key)
+" Mappings for latam keyboards
+map Ñ :
+map ñ ;
+nnoremap <Space>- /
+nnoremap <Space>_ ?
 nnoremap ZZ <Nop>
-
-" Alt mappings for search in latam keyboards
-" call s:AltMapping('n', 'nore', '-', '/')
-" call s:AltMapping('n', 'nore', '_', '?')
 
 
 "--------------------
@@ -563,8 +545,5 @@ set guioptions-=r  "remove right-hand scroll bar
 set guioptions-=R  "remove right-hand scroll bar on vertical split
 set guioptions-=l  "remove left-hand scroll bar
 set guioptions-=L  "remove left-hand scroll bar on vertical split
-
-" Set nicer colors for folding
-highlight Folded guibg=chocolate4 guifg=black
 
 endif
