@@ -107,12 +107,8 @@ autocmd visuals FileType vim setlocal tabstop=2 softtabstop=2 shiftwidth=2 expan
 " Set default max line width to 80 and highlight excess
 " (for programming languages)
 set nowrap
-set textwidth=79
 autocmd visuals FileType c,cpp,python highlight Excess ctermbg=DarkRed guibg=DarkRed
 autocmd visuals FileType c,cpp,python match Excess /\%80v.*/
-
-" Set default max line width in text files to 150. Less is cumbersome
-autocmd visuals FileType text setlocal textwidth=150
 
 " Highlight trailing whitespace
 autocmd visuals FileType * syntax match TrailingWhiteSpace "\s\+$" display
@@ -373,17 +369,17 @@ augroup NoSimultaneousEdits
 augroup END
 
 " Shortly blink the line and column of the search match
-function! s:HLNext (blinktime)
+function! s:HLNext ()
   set invcursorline invcursorcolumn
   redraw
-  exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
+  sleep 100m
   set invcursorline invcursorcolumn
   redraw
 endfunction
-nnoremap <silent> *   *:call <SID>HLNext(0.1)<cr>
-nnoremap <silent> #   #:call <SID>HLNext(0.1)<cr>
-nnoremap <silent> n   n:call <SID>HLNext(0.1)<cr>
-nnoremap <silent> N   N:call <SID>HLNext(0.1)<cr>
+nnoremap <silent> *   *:call <SID>HLNext()<cr>
+nnoremap <silent> #   #:call <SID>HLNext()<cr>
+nnoremap <silent> n   n:call <SID>HLNext()<cr>
+nnoremap <silent> N   N:call <SID>HLNext()<cr>
 
 " Tags
 let s:ctags = s:is_windows ? s:vimrcdir . '/ctags58/ctags.exe' : 'ctags'
@@ -499,7 +495,6 @@ function! s:SetupProject()
       let s:project_venv = l:venv
       " Set max line width to 120 and highlight excess
       match Excess /\%120v.*/
-      setlocal nowrap textwidth=119
       " Ignore venv in file completion
       set wildignore+=venv*/*
     endif
