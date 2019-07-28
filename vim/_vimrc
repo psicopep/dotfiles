@@ -75,16 +75,14 @@ endif
 " Set color scheme
 if ($DISPLAY !=# '' || (s:is_windows && s:is_gui)) && stridx(&rtp, 'angr.vim') != -1
   colorscheme angr
-  highlight Normal ctermbg=None guibg=Black
-  highlight LineNr ctermbg=None guibg=Black
-elseif s:is_windows && !s:is_gui
-  colorscheme default
+  highlight LineNr ctermbg=none guibg=black
+  highlight Pmenu ctermbg=lightblue ctermfg=black guibg=lightblue guifg=black
+  highlight Excess ctermbg=darkred guibg=darkred
 else
-  colorscheme torte
+  highlight Pmenu ctermbg=gray ctermfg=black guibg=lightblue guifg=black
+  highlight link Excess ColorColumn
 endif
-
-" Set nicer colors for complete menu
-highlight Pmenu ctermbg=lightblue ctermfg=black guibg=lightblue guifg=black
+highlight Normal ctermbg=none guibg=black
 highlight PmenuSel ctermbg=black ctermfg=red guibg=black guifg=red
 
 " Set filename as window title
@@ -107,12 +105,11 @@ autocmd visuals FileType vim setlocal tabstop=2 softtabstop=2 shiftwidth=2 expan
 " Set default max line width to 80 and highlight excess
 " (for programming languages)
 set nowrap
-autocmd visuals FileType c,cpp,python highlight Excess ctermbg=DarkRed guibg=DarkRed
 autocmd visuals FileType c,cpp,python match Excess /\%80v.*/
 
 " Highlight trailing whitespace
+highlight TrailingWhiteSpace ctermbg=Red guibg=Red
 autocmd visuals FileType * syntax match TrailingWhiteSpace "\s\+$" display
-autocmd visuals FileType * highlight TrailingWhiteSpace ctermbg=Red guibg=Red
 
 " Statusline Settings
 set laststatus=2    " Always show statusline
@@ -171,7 +168,6 @@ nnoremap ZZ <Nop>
 " SimpleTree
 nnoremap <Space>f :SimpleTreeToggle<CR>
 let g:simpletree_use_arrows = 1
-let g:simpletree_close_on_esc = 1
 
 " Jedi
 let g:jedi#popup_on_dot = 0
@@ -182,9 +178,9 @@ let g:jedi#usages_command = 'Qu'
 let g:jedi#force_py_version = 3
 
 " Clang_complete
-let g:clang_make_default_keymappings = 1
-let g:clang_auto_select = 1
-let g:clang_snippets = 1
+let g:clang_complete_auto = 0
+let g:clang_make_default_keymappings = 0
+let g:clang_jumpto_declaration_key = 'Qd'
 
 " OmniSharp
 if stridx(&rtp, 'omnisharp-vim') != -1
@@ -305,13 +301,8 @@ else
   command! -nargs=0 Lint :silent! make! | cwindow | redraw!
 endif
 function! s:GetPyLint()
-  if filereadable('venv/bin/pylint')
-    return 'venv/bin/pylint'
-  elseif filereadable('venv/Scripts/pylint')
-    return 'venv/Scripts/pylint'
-  else
-    return 'pylint'
-  endif
+  let l:venv_pylint = (s:is_windows ? 'venv/Scripts' : 'venv/bin') . '/pylint'
+  return filereadable(l:venv_pylint) ? l:venv_pylint : 'pylint'
 endfunction
 augroup auto_lint
   autocmd!
