@@ -130,7 +130,7 @@ autocmd visuals FileType * setlocal completeopt-=preview
 nnoremap Q <Nop>
 
 " Nicer Buffer Navigation
-cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'bd' : 'q')<CR>
+cabbrev q <c-r>=(getcmdtype()==':' && getcmdpos()==1 && ((len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1) \|\| (&ft == 'netrw')) ? 'bd' : 'q')<CR>
 cabbrev wq <c-r>=(getcmdtype()==':' && getcmdpos()==1 && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) > 1? 'w<bar>bd' : 'wq')<CR>
 nnoremap <Space>s :ls<cr>:b 
 
@@ -166,8 +166,12 @@ nnoremap ZZ <Nop>
 "--------------------
 
 " SimpleTree
-nnoremap <Space>f :SimpleTreeToggle<CR>
-let g:simpletree_use_arrows = 1
+if stridx(&rtp, 'simpletree') != -1
+  nnoremap <Space>f :SimpleTreeToggle<CR>
+  let g:simpletree_use_arrows = 1
+else
+  nnoremap <expr> <Space>f (&ft == 'netrw') ? ":bd\<CR>" : (exists(':Rexplore') ? ":Rexplore\<CR>" : ":Explore\<CR>")
+endif
 
 " Jedi
 let g:jedi#popup_on_dot = 0
@@ -268,9 +272,7 @@ if has('signs')
   let s:lint_marks = {}
   sign define piet text=>> texthl=Search
   function! s:SetLintMarks() " Chunks unashamedly borrowed from errormarker.vim
-    for l:key in keys(s:lint_marks)
-      execute ':sign unplace ' . l:key
-    endfor
+    call sign_unplace('lint', {'buffer': bufname('')})
     let s:lint_marks = {}
     for l:d in getqflist()
       let l:key = l:d.bufnr . l:d.lnum
@@ -278,8 +280,7 @@ if has('signs')
         continue
       endif
       let s:lint_marks[l:key] = l:d.text
-      execute ':sign place ' . l:key . ' line=' . l:d.lnum . ' name=piet'
-            \ . ' buffer=' . l:d.bufnr
+      call sign_place(l:key, 'lint', 'piet', l:d.bufnr, l:d)
     endfor
   endfunction
   function! s:ShowLintText() " Bits inspired by Syntastic
@@ -410,17 +411,11 @@ nnoremap <Space>g :call <SID>ShowTags(1)<CR>
 
 " VirtualEnv Support
 function! s:GetVenvDirsAndVer(virtualenv)
-  if isdirectory(a:virtualenv . '/bin')
-    let l:bin = a:virtualenv . '/bin'
-    let l:lib = glob(a:virtualenv . '/lib/*/site-packages')
-    let l:python3 = filereadable(l:bin . '/python3')
-  elseif isdirectory(a:virtualenv . '/Scripts')
-    let l:bin = a:virtualenv . '/Scripts'
-    let l:lib = glob(a:virtualenv . '/Lib/site-packages')
-    let l:python3 = filereadable(l:bin . '/python3.dll')
-  else
-    return
-  endif
+  let l:binpat = substitute('{}/bin,{}/Scripts', '{}', a:virtualenv, 'g')
+  let l:bin = substitute(globpath(l:binpat, ''), '/$', '', '')
+  let l:libpat = substitute('{}/lib/*/,{}/lib/', '{}', a:virtualenv, 'g')
+  let l:lib = globpath(l:libpat, 'site-packages')
+  let l:python3 = !empty(glob(l:bin . '/python3*'))
   return [l:bin, l:lib, l:python3]
 endfunction
 function! s:SetupVirtualEnv(virtualenv) abort
