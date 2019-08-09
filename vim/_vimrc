@@ -272,7 +272,10 @@ if has('signs')
   let s:lint_marks = {}
   sign define piet text=>> texthl=Search
   function! s:SetLintMarks() " Chunks unashamedly borrowed from errormarker.vim
-    call sign_unplace('lint', {'buffer': bufname('')})
+    " NOTE: Use sign command, not functions, for old Vim versions compatibility
+    for l:key in keys(s:lint_marks)
+      execute ':sign unplace ' . l:key
+    endfor
     let s:lint_marks = {}
     for l:d in getqflist()
       let l:key = l:d.bufnr . l:d.lnum
@@ -280,7 +283,8 @@ if has('signs')
         continue
       endif
       let s:lint_marks[l:key] = l:d.text
-      call sign_place(l:key, 'lint', 'piet', l:d.bufnr, l:d)
+      execute ':sign place ' . l:key . ' line=' . l:d.lnum . ' name=piet'
+            \ . ' buffer=' . l:d.bufnr
     endfor
   endfunction
   function! s:ShowLintText() " Bits inspired by Syntastic
